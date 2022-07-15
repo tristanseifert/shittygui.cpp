@@ -125,5 +125,5 @@ endif()
 #######################################
 # Include examples if this is the top level CMake file
 if(PROJECT_IS_TOP_LEVEL)
-    # TODO
+    add_subdirectory(examples)
 endif()
