@@ -100,6 +100,8 @@ target_link_libraries(shittygui PUBLIC ${PKG_FREETYPE_LIBRARIES} ${PKG_CAIRO_LIB
     ${PKG_HARFBUZZ_LIBRARIES} ${PKG_PANGO_LIBRARIES} ${PKG_PANGOCAIRO_LIBRARIES}
     ${PKG_GLIB2_LIBRARIES} ${PKG_GOBJECT2_LIBRARIES})
 
+add_library(shittygui::shittygui ALIAS shittygui)
+
 #######################################
 # PNG support
 if(PKG_PNG_FOUND)

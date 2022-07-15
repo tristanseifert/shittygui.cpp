@@ -22,7 +22,7 @@ struct Size {
      * @param width How wide is it?
      * @param height How tall is it?
      */
-    Size(const uint16_t width, const uint16_t height) : width(width), height(height) {}
+    constexpr Size(const uint16_t width, const uint16_t height) : width(width), height(height) {}
 
     /// Width of screen, in pixels
     uint16_t width{0};
@@ -35,7 +35,7 @@ struct Size {
  */
 struct Point {
     Point() = default;
-    Point(const int16_t x, const int16_t y) : x(x), y(y) {}
+    constexpr Point(const int16_t x, const int16_t y) : x(x), y(y) {}
 
     int16_t x{0};
     int16_t y{0};

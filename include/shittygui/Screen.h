@@ -53,6 +53,25 @@ class Screen {
             return OptimalStrideForBuffer(format, size.width);
         }
 
+        /**
+         * @brief Determine if the screen needs to be redrawn
+         *
+         * The screen is dirtied if any of the components in the widget hierarchy become dirty,
+         * usually in response to some sort of external event.
+         */
+        inline bool isDirty() const {
+            return this->dirtyFlag;
+        }
+        /// Mark the screen as needing to be redrawn
+        inline void needsDisplay() {
+            this->dirtyFlag = true;
+        }
+
+        void redraw();
+
+    private:
+        void commonInit();
+
     private:
         /// Pixel format of the screen
         PixelFormat format;
@@ -64,6 +83,11 @@ class Screen {
 
         /// Underlying Cairo rendering surface
         struct _cairo_surface *surface{nullptr};
+        /// Cairo drawing context, backed by the framebuffer surface
+        struct _cairo *drawCtx{nullptr};
+
+        /// Set when any widget in this screen becomes dirty
+        bool dirtyFlag{true};
 };
 }
 

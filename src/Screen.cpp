@@ -61,6 +61,8 @@ Screen::Screen(const PixelFormat format, const Size &size) : format(format), phy
     if(status != CAIRO_STATUS_SUCCESS) {
         ThrowForCairoStatus(status);
     }
+
+    this->commonInit();
 }
 
 /**
@@ -86,6 +88,22 @@ Screen::Screen(const PixelFormat format, const Size &size, std::span<std::byte> 
     if(status != CAIRO_STATUS_SUCCESS) {
         ThrowForCairoStatus(status);
     }
+
+    this->commonInit();
+}
+
+/**
+ * @brief Perform common initialization
+ *
+ * This sets up the Cairo drawing context.
+ */
+void Screen::commonInit() {
+    this->drawCtx = cairo_create(this->surface);
+    auto status = cairo_status(this->drawCtx);
+
+    if(status != CAIRO_STATUS_SUCCESS) {
+        ThrowForCairoStatus(status);
+    }
 }
 
 /**
@@ -96,6 +114,7 @@ Screen::Screen(const PixelFormat format, const Size &size, std::span<std::byte> 
  */
 Screen::~Screen() {
     // clear cairo resources
+    cairo_destroy(this->drawCtx);
     cairo_surface_destroy(this->surface);
 }
 
@@ -114,4 +133,15 @@ void *Screen::getBuffer() {
  */
 size_t Screen::getBufferStride() const {
     return cairo_image_surface_get_stride(this->surface);
+}
+
+/**
+ * @brief Redraw the screen
+ *
+ * Draws the contents of the screen (that is, the root widget, and any descendant widgets) into the
+ * underlying framebuffer. Only dirty widgets will be drawn.
+ */
+void Screen::redraw() {
+    // clear the dirty flag
+    this->dirtyFlag = false;
 }
