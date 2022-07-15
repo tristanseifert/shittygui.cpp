@@ -1,3 +1,8 @@
+/**
+ * @file
+ *
+ * @brief Error handling
+ */
 #ifndef SHITTYGUI_ERRORS_H
 #define SHITTYGUI_ERRORS_H
 

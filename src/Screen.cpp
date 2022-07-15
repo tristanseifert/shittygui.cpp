@@ -4,6 +4,7 @@
 
 #include "Errors.h"
 #include "Screen.h"
+#include "Widget.h"
 
 using namespace shittygui;
 
@@ -104,6 +105,9 @@ void Screen::commonInit() {
     if(status != CAIRO_STATUS_SUCCESS) {
         ThrowForCairoStatus(status);
     }
+
+    // optimize rendering for performance
+    cairo_set_antialias(this->drawCtx, CAIRO_ANTIALIAS_FAST);
 }
 
 /**
@@ -142,6 +146,19 @@ size_t Screen::getBufferStride() const {
  * underlying framebuffer. Only dirty widgets will be drawn.
  */
 void Screen::redraw() {
+    // draw background if no root widget, or it's not opaque
+    if(!this->rootWidget || !this->rootWidget->isOpaque()) {
+        const auto &bg = this->backgroundColor;
+        cairo_set_source_rgba(this->drawCtx, bg.r, bg.g, bg.b, bg.a);
+        cairo_paint(this->drawCtx);
+    }
+
+    // draw the root widget
+    if(this->rootWidget) {
+        this->rootWidget->draw(this->drawCtx, this->forceDisplayFlag);
+        this->forceDisplayFlag = false;
+    }
+
     // clear the dirty flag
     this->dirtyFlag = false;
 }

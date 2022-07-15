@@ -48,6 +48,8 @@ int main(const int argc, const char **argv) {
             kWindowSize);
     printf("framebuffer: %p (stride %lu bytes)\n", screen->getBuffer(), screen->getBufferStride());
 
+    screen->setBackgroundColor({0, 0.33, 0});
+
     // set up texture to render into
     const auto &physSize = screen->getFramebufferSize();
     auto inTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING,
@@ -57,9 +59,6 @@ int main(const int argc, const char **argv) {
         std::cerr << "SDL_CreateTextureFromSurface failed: " << SDL_GetError() << std::endl;
         return 1;
     }
-
-    // draw the screen initially
-    screen->needsDisplay();
 
     /*
      * Main loop: wait for an event to arrive (in the form of user input or other events) and then

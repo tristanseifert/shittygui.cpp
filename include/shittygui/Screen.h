@@ -3,11 +3,14 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <span>
 
 #include <shittygui/Types.h>
 
 namespace shittygui {
+class Widget;
+
 /**
  * @brief GUI screen class
  *
@@ -64,10 +67,45 @@ class Screen {
         }
         /// Mark the screen as needing to be redrawn
         inline void needsDisplay() {
+            this->forceDisplayFlag = true;
             this->dirtyFlag = true;
         }
 
+        /**
+         * @brief Update the root widget of the screen
+         *
+         * Replace the existing root widget with this new widget, then invalidate the screen so
+         * it's redrawn.
+         *
+         * @param newRoot Widget to set as the root
+         */
+        void setRootWidget(const std::shared_ptr<Widget> &newRoot) {
+            this->rootWidget = newRoot;
+            this->needsDisplay();
+        }
+        /**
+         * @brief Get the current root widget
+         *
+         * @return Current root widget (if any has been set)
+         */
+        inline auto getRootWidget() {
+            return this->rootWidget;
+        }
+
         void redraw();
+
+        /**
+         * @brief Set the screen's background color
+         *
+         * The background color is visible anywhere the root view does not draw (if it's not fully
+         * opaque) or if there is no root view.
+         *
+         * @param newColor Color to draw as the background. It should have an alpha value of 1.
+         */
+        inline void setBackgroundColor(const Color &newColor) {
+            this->backgroundColor = newColor;
+            this->needsDisplay();
+        }
 
     private:
         void commonInit();
@@ -86,8 +124,15 @@ class Screen {
         /// Cairo drawing context, backed by the framebuffer surface
         struct _cairo *drawCtx{nullptr};
 
+        /// Screen background color
+        Color backgroundColor;
+        /// Root widget, which receives all events and draw requests
+        std::shared_ptr<Widget> rootWidget;
+
         /// Set when any widget in this screen becomes dirty
-        bool dirtyFlag{true};
+        bool dirtyFlag{false};
+        /// Set to force rendering of _all_ widgets regardless of dirty status
+        bool forceDisplayFlag{false};
 };
 }
 
