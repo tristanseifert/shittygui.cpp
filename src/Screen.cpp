@@ -222,11 +222,11 @@ void Screen::handleAnimations() {
  */
 void Screen::setRootWidget(const std::shared_ptr<Widget> &newRoot) {
     if(this->rootWidget) {
-        this->rootWidget->moveToScreen(nullptr);
+        this->rootWidget->setScreen(nullptr);
         this->rootWidget.reset();
     }
 
-    newRoot->moveToScreen(this->shared_from_this());
+    newRoot->setScreen(this->shared_from_this());
     this->rootWidget = newRoot;
     this->needsDisplay();
 }

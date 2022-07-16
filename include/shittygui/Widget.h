@@ -25,6 +25,8 @@ class Screen;
  * parent of the widget.
  */
 class Widget: public std::enable_shared_from_this<Widget> {
+    friend class Screen;
+
     public:
         /**
          * @brief Initialize a widget with the given frame
@@ -163,14 +165,21 @@ class Widget: public std::enable_shared_from_this<Widget> {
         }
 
         /**
-         * @brief The widget is moving to a new screen
-         *
-         * @remark This routine is invoked only on the root widget. It is useless in any child
-         *         widgets.
+         * @brief Notification that our root view is about to change screens
          */
-        inline void moveToScreen(const std::shared_ptr<Screen> &newScreen) {
-            this->screen = newScreen;
-        }
+        virtual inline void willMoveToScreen(const std::shared_ptr<Screen> &newScreen) {}
+
+        /**
+         * @brief Notification that the root screen changed
+         *
+         * All widgets receive this notification when the screen that their root view is attached
+         * to changes.
+         *
+         * @param newScreen Reference to the new screen
+         *
+         * @remark Subclasses must invoke this base class implementation.
+         */
+        virtual void didMoveToScreen(const std::shared_ptr<Screen> &newScreen);
 
     protected:
         /**
@@ -220,7 +229,44 @@ class Widget: public std::enable_shared_from_this<Widget> {
         }
 
     private:
+        void setScreen(const std::shared_ptr<Screen> &newScreen);
+
         void updateChildData();
+
+        /**
+         * @brief Execute a widget callback (recursive step)
+         *
+         * @tparam Func Function type for the callback (typically an std::bind expression)
+         * @tparam Args Argument pack for the callback function
+         */
+        template<typename Func, typename... Args>
+        void invokeCallbackRecursive(std::deque<std::shared_ptr<Widget>> &widgets, Func what, Args&&... args) {
+            for(auto &child : widgets) {
+                what(child, std::forward<Args>(args)...);
+
+                if(!child->children.empty()) {
+                    this->invokeCallbackRecursive(child->children, what, std::forward<Args>(args)...);
+                }
+            }
+        }
+
+        /**
+         * @brief Execute a widget callback
+         *
+         * Invoke the specified callback function on this widget and all of its children
+         * recursively.
+         *
+         * @tparam Func Function type for the callback (typically an std::bind expression)
+         * @tparam Args Argument pack for the callback function
+         *
+         * @param what Callback function to invoke
+         * @param args Arguments to callback function
+         */
+        template<typename Func, typename... Args>
+        void invokeCallbackRecursive(Func what, Args&&... args) {
+            what(this, std::forward<Args>(args)...);
+            this->invokeCallbackRecursive(this->children, what, std::forward<Args>(args)...);
+        }
 
     protected:
         /**
@@ -258,6 +304,11 @@ class Widget: public std::enable_shared_from_this<Widget> {
          * to optimize drawing.
          */
         uintptr_t hasTransparentChildren        :1{false};
+
+        /**
+         * @brief Whether the widget has been registered with an animator
+         */
+        uintptr_t animatorRegistered            :1{false};
 
     private:
         /**

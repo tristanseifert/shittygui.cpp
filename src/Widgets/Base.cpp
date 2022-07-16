@@ -209,6 +209,30 @@ void Widget::needsChildDisplay() {
 
 
 /**
+ * @brief Set the screen the widget is on
+ *
+ * This is a helper method invoked by the Screen when the root view is updated. It sets the
+ * reference in our instance, then invokes the appropriate handlers in all children.
+ */
+void Widget::setScreen(const std::shared_ptr<Screen> &newScreen) {
+    using namespace std::placeholders;
+
+    this->invokeCallbackRecursive(std::bind(&Widget::willMoveToScreen, _1, _2), newScreen);
+    this->screen = newScreen;
+    this->invokeCallbackRecursive(std::bind(&Widget::didMoveToScreen, _1, _2), newScreen);
+}
+
+/**
+ * This default implementation registers the widget with the screen's animator.
+ */
+void Widget::didMoveToScreen(const std::shared_ptr<Screen> &screen) {
+    if(this->wantsAnimation() && !this->animatorRegistered) {
+        screen->anim->registerWidget(this->shared_from_this());
+        this->animatorRegistered = true;
+    }
+}
+
+/**
  * @brief Invoked when the widget is added to a view hierarchy
  *
  * @param newParent New parent widget
@@ -220,9 +244,10 @@ void Widget::adopted(const std::shared_ptr<Widget> &newParent) {
     this->parent = newParent;
 
     // install in animator
-    if(this->wantsAnimation()) {
+    if(this->wantsAnimation() && !this->animatorRegistered) {
         if(auto anim = this->getAnimator()) {
             anim->registerWidget(this->shared_from_this());
+            this->animatorRegistered = true;
         }
     }
 }
@@ -237,5 +262,6 @@ void Widget::orphaned() {
     // notify animator
     if(auto anim = this->getAnimator()) {
         anim->unregisterWidget(this->shared_from_this());
+        this->animatorRegistered = false;
     }
 }

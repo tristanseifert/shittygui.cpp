@@ -20,6 +20,8 @@ class Widget;
  * their underlying framebuffer.
  */
 class Screen: public std::enable_shared_from_this<Screen> {
+    friend class Widget;
+
     public:
         enum class PixelFormat {
             /// 24-bit color in a 32-bit value; upper 8 bits alpha, premultiplied
