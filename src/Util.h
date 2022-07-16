@@ -7,21 +7,22 @@
 #define SHITTYGUI_UTIL_H
 
 #include <algorithm>
+#include <deque>
 #include <vector>
 
 namespace shittygui {
 /**
- * @brief Move elements between vectors based on predicate
+ * @brief Move elements based on predicate
  *
  * @tparam T Element type in vectors
  * @tparam F Predicate type
  *
- * @param old Input vector containing all elements
+ * @param old Input deque containing all elements
  * @param out Output vector to receive all elements matching predicate
  * @parap pred Predicate to invoke to decide what elements to move
  */
 template <class T, class F>
-void transfer_if_not(std::vector<T> &old, std::vector<T> &out, F pred) {
+void transfer_if_not(std::deque<T> &old, std::vector<T> &out, F pred) {
     auto part = std::partition(old.begin(), old.end(), pred);
     std::move(part, old.end(), std::back_inserter(out));
     old.erase(part);

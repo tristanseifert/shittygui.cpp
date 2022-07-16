@@ -4,6 +4,8 @@
  * @brief SDL2 output example
  */
 #include <shittygui/Screen.h>
+#include <shittygui/Widgets/Container.h>
+
 #include <SDL.h>
 
 #include <atomic>
@@ -18,16 +20,43 @@ constexpr static const shittygui::Size kWindowSize{800, 480};
 std::atomic_bool gRun{true};
 
 /**
+ * @brief Set up the demo screen
+ */
+static void InitScreen(const std::shared_ptr<shittygui::Screen> &screen) {
+    // create outer container
+    auto cont = shittygui::MakeWidget<shittygui::widgets::Container>({0, 0}, {800, 480});
+    cont->setDrawsBorder(false);
+    cont->setBackgroundColor({0, 0.125, 0});
+
+    // left container
+    auto left = shittygui::MakeWidget<shittygui::widgets::Container>({20, 20}, {360, 430});
+    left->setBackgroundColor({0.33, 0, 0});
+
+    cont->addChild(left);
+
+    // right container
+    auto right = shittygui::MakeWidget<shittygui::widgets::Container>({420, 20}, {360, 430});
+    right->setBackgroundColor({0, 0, 0.33});
+
+    cont->addChild(right);
+
+    // set container as root
+    screen->setRootWidget(cont);
+}
+
+/**
  * Application entry point
  */
 int main(const int argc, const char **argv) {
+    int err;
     std::shared_ptr<shittygui::Screen> screen;
 
     // get a SDL window and renderer set up
     SDL_Init(SDL_INIT_VIDEO);
 
     auto window = SDL_CreateWindow("ShittyGUI Test", SDL_WINDOWPOS_CENTERED,
-            SDL_WINDOWPOS_CENTERED, kWindowSize.width, kWindowSize.height, 0);
+            SDL_WINDOWPOS_CENTERED, kWindowSize.width, kWindowSize.height,
+            SDL_WINDOW_ALLOW_HIGHDPI);
     if(!window) {
         std::cerr << "SDL_CreateWindow failed: " << SDL_GetError() << std::endl;
         return 1;
@@ -43,12 +72,26 @@ int main(const int argc, const char **argv) {
     SDL_RenderClear(renderer);
     SDL_RenderPresent(renderer);
 
+    // figure out if our UI is scaled
+    int renderW, renderH, windowW, windowH;
+    err = SDL_GetRendererOutputSize(renderer, &renderW, &renderH);
+    if(err) {
+        std::cerr << "SDL_GetRendererOutputSize failed: " << SDL_GetError() << std::endl;
+        return 1;
+    }
+
+    SDL_GetWindowSize(window, &windowW, &windowH);
+
+    printf("Window size: %dx%d, drawable size %dx%d\n", windowW, windowH, renderW, renderH);
+
     // set up GUI library
     screen = std::make_shared<shittygui::Screen>(shittygui::Screen::PixelFormat::ARGB32,
             kWindowSize);
     printf("framebuffer: %p (stride %lu bytes)\n", screen->getBuffer(), screen->getBufferStride());
 
     screen->setBackgroundColor({0, 0.33, 0});
+
+    InitScreen(screen);
 
     // set up texture to render into
     const auto &physSize = screen->getFramebufferSize();

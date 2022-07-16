@@ -92,6 +92,7 @@ add_library(shittygui STATIC
     ${VERSION_FILE}
     src/Screen.cpp
     src/Widgets/Base.cpp
+    src/Widgets/Container.cpp
 )
 target_include_directories(shittygui PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 target_include_directories(shittygui PRIVATE ${CMAKE_CURRENT_LIST_DIR}/include/shittygui)

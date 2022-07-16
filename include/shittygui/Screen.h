@@ -57,6 +57,18 @@ class Screen {
         }
 
         /**
+         * @brief Set the UI scale factor
+         *
+         * The scale factor can be used to support high pixel density displays. Positive values
+         * above will increase the size of UI components, and values below 1 (and above 0) will
+         * shrink them.
+         */
+        inline void setScaleFactor(const double scale) {
+            this->scaleFactor = scale;
+            this->scaled = true;
+        }
+
+        /**
          * @brief Determine if the screen needs to be redrawn
          *
          * The screen is dirtied if any of the components in the widget hierarchy become dirty,
@@ -118,6 +130,8 @@ class Screen {
         Size physSize;
         /// Dimensions of the rendering surface (takes into account rotation)
         Size size;
+        /// User interface scale factor
+        double scaleFactor{1.};
 
         /// Underlying Cairo rendering surface
         struct _cairo_surface *surface{nullptr};
@@ -133,6 +147,8 @@ class Screen {
         bool dirtyFlag{false};
         /// Set to force rendering of _all_ widgets regardless of dirty status
         bool forceDisplayFlag{false};
+        /// Whether the screen applies UI scaling
+        bool scaled{false};
 };
 }
 

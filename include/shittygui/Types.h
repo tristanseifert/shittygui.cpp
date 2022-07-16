@@ -25,6 +25,11 @@ struct Color {
     /// Create a color with the specified alpha value
     constexpr Color(const float r, const float g, const float b, const float a) : r(r), g(g), b(b), a(a) {}
 
+    /// Is this color opaque?
+    constexpr inline bool isOpaque() const {
+        return (this->a >= 1.);
+    }
+
     /// Color component values
     float r{0}, g{0}, b{0};
     /// Alpha component value
@@ -60,6 +65,22 @@ struct Point {
 
     int16_t x{0};
     int16_t y{0};
+};
+
+/**
+ * @brief Rectangular area
+ *
+ * Defines a rectangular area on the screen, by a combination of its origin point and the full size
+ * of the region.
+ *
+ * @remark The origin is located at the top left of the screen.
+ */
+struct Rect {
+    Rect() = default;
+    constexpr Rect(const Point origin, const Size size) : origin(origin), size(size) {}
+
+    Point origin;
+    Size size;
 };
 }
 

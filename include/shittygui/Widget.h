@@ -1,9 +1,9 @@
 #ifndef SHITTYGUI_WIDGET_H
 #define SHITTYGUI_WIDGET_H
 
+#include <deque>
 #include <memory>
 #include <span>
-#include <vector>
 
 #include <shittygui/Types.h>
 
@@ -14,9 +14,21 @@ namespace shittygui {
  * This is an abstract base class that all ShittyGUI widgets descend from. It provides some basic
  * common behavior for all widgets (such as bounds/origin management, event handling, view tree
  * management, etc.) under a common interface.
+ *
+ * Widgets have both bounds and a frame; this is similar to other GUI frameworks. In our case, the
+ * bounds define the size of a widget in its own coordinate system (that is, its origin coincides
+ * with the origin of the widget.) On the other hand, the frame specifies an origin relative to the
+ * parent of the widget.
  */
 class Widget {
     public:
+        /**
+         * @brief Initialize a widget with the given frame
+         *
+         * @param frame Frame rectangle, its origin is relative to the parent widget
+         */
+        Widget(const Rect &frame) : frame(frame) {}
+
         virtual ~Widget() = default;
 
         /**
@@ -45,9 +57,21 @@ class Widget {
          * Widgets should keep track of their internal "dirty" state. When their state changes,
          * they should mark themselves as dirty (and update parents)
          *
+         * This basic implementation uses a boolean flag that's set by `needsDisplay`.
+         *
          * @remark Even if this method returns `false` you may still receive draw events
          */
-        virtual bool isDirty() = 0;
+        virtual bool isDirty() {
+            return this->dirtyFlag;
+        }
+
+        /**
+         * @brief Mark the widget as dirty
+         *
+         * This routine is invoked by other code in the GUI layer to mark this widget as needing
+         * to be redrawn.
+         */
+        virtual void needsDisplay();
 
         /**
          * @brief Draw the widget
@@ -59,17 +83,15 @@ class Widget {
          * @param drawCtx Cairo drawing context
          * @param everything When set, draw everything regardless of dirty status
          */
-        virtual void draw(struct _cairo *drawCtx, const bool everything) = 0;
+        virtual void draw(struct _cairo *drawCtx, const bool everything = false) {
+            this->dirtyFlag = false;
+        }
+        virtual void drawChildren(struct _cairo *drawCtx, const bool everything = false);
 
-        void addChild(const std::shared_ptr<Widget> &toAdd);
+        void addChild(const std::shared_ptr<Widget> &toAdd, const bool atStart = false);
         bool removeChild(const std::shared_ptr<Widget> &toRemove);
         bool removeFromParent();
-        /**
-         * @brief Get all children in this widget
-         */
-        constexpr inline std::span<std::shared_ptr<Widget>> getChildren() {
-            return this->children;
-        }
+
         /**
          * @brief Whether this view has any children
          */
@@ -88,6 +110,24 @@ class Widget {
          */
         virtual void orphaned() {}
 
+        /**
+         * @brief Get the frame rectangle of the widget
+         */
+        constexpr inline auto getFrame() const {
+            return this->frame;
+        }
+        /**
+         * @brief Set the frame rectangle of the widget
+         *
+         * Set the frame (where the origin is _relative_ to its parent) of the widget.
+         *
+         * @param newFrame New frame rectangle
+         */
+        void setFrame(const Rect &newFrame) {
+            this->frame = newFrame;
+            this->needsDisplay();
+        }
+
     protected:
         /**
          * @brief Parent widget
@@ -104,7 +144,43 @@ class Widget {
          *
          * Pointers to all children added to widget.
          */
-        std::vector<std::shared_ptr<Widget>> children;
+        std::deque<std::shared_ptr<Widget>> children;
+
+        /**
+         * @brief Frame rectangle
+         */
+        Rect frame;
+
+        /**
+         * @brief Dirty indicator
+         *
+         * Set any time needsDisplay is called, and returned by isDirty. If you're using the
+         * default dirty tracking, reset this flag when done with draw().
+         *
+         * @seeAlso needsDisplay
+         * @seeAlso isDirty
+         */
+        bool dirtyFlag{false};
+};
+
+/**
+ * @brief Allocate a new widget
+ *
+ * @tparam T Widget type
+ *
+ * @param origin Origin of the widget's frame
+ * @param size Size of the widget's frame
+ *
+ * @return Initialized widget
+ */
+template<typename T>
+std::shared_ptr<T> MakeWidget(const Point origin, const Size size) {
+    return std::make_shared<T>(Rect{origin, size});
+}
+
+/// Widget implementations
+namespace widgets {
+
 };
 };
 

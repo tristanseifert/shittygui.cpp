@@ -2,6 +2,7 @@
 
 #include <cairo.h>
 
+#include "CairoHelpers.h"
 #include "Errors.h"
 #include "Screen.h"
 #include "Widget.h"
@@ -146,19 +147,36 @@ size_t Screen::getBufferStride() const {
  * underlying framebuffer. Only dirty widgets will be drawn.
  */
 void Screen::redraw() {
+    cairo_save(this->drawCtx);
+
+    // apply UI scale
+    if(this->scaled) {
+        const double factor{1./this->scaleFactor};
+        cairo_scale(this->drawCtx, factor, factor);
+    }
+
     // draw background if no root widget, or it's not opaque
     if(!this->rootWidget || !this->rootWidget->isOpaque()) {
-        const auto &bg = this->backgroundColor;
-        cairo_set_source_rgba(this->drawCtx, bg.r, bg.g, bg.b, bg.a);
+        cairo::SetSource(this->drawCtx, this->backgroundColor);
         cairo_paint(this->drawCtx);
     }
 
-    // draw the root widget
+    /*
+     * Draw the root widget
+     *
+     * Note that we do not apply any clipping regions nor translate the coordinate space; this is
+     * because the root widget (by definition) fills the entire screen. Requests to draw outside
+     * the screen will be implicitly discarded.
+     */
     if(this->rootWidget) {
         this->rootWidget->draw(this->drawCtx, this->forceDisplayFlag);
+        this->rootWidget->drawChildren(this->drawCtx, this->forceDisplayFlag);
+
         this->forceDisplayFlag = false;
     }
 
     // clear the dirty flag
     this->dirtyFlag = false;
+
+    cairo_restore(this->drawCtx);
 }
