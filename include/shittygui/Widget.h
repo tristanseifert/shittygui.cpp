@@ -27,7 +27,9 @@ class Widget {
          *
          * @param frame Frame rectangle, its origin is relative to the parent widget
          */
-        Widget(const Rect &frame) : frame(frame) {}
+        Widget(const Rect &frame) {
+            this->setFrame(frame);
+        }
 
         virtual ~Widget() = default;
 
@@ -125,7 +127,14 @@ class Widget {
          */
         void setFrame(const Rect &newFrame) {
             this->frame = newFrame;
+            this->bounds = {{0, 0}, newFrame.size};
             this->needsDisplay();
+        }
+        /**
+         * @brief Get the bounds rectangle of the widget
+         */
+        constexpr inline auto getBounds() const {
+            return this->bounds;
         }
 
     protected:
@@ -150,6 +159,10 @@ class Widget {
          * @brief Frame rectangle
          */
         Rect frame;
+        /**
+         * @brief Bounds rectangle
+         */
+        Rect bounds;
 
         /**
          * @brief Dirty indicator

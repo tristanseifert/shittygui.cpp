@@ -79,6 +79,34 @@ struct Rect {
     Rect() = default;
     constexpr Rect(const Point origin, const Size size) : origin(origin), size(size) {}
 
+    /**
+     * @brief Inset the rectangle by the given amount
+     *
+     * The rectangle's origin is shifted by the given X and Y amounts, and its size decreased by
+     * double these values.
+     *
+     * @remark Specify negative inset values to expand the rect instead.
+     *
+     * @param dX Inset on X axis
+     * @param dY Inset on Y axis
+     */
+    constexpr inline Rect inset(const double dX, const double dY) const {
+        auto temp = *this;
+        temp.origin.x += dX;
+        temp.origin.y += dY;
+        temp.size.width -= (dX * 2.);
+        temp.size.height -= (dY * 2.);
+        return temp;
+    }
+    /**
+     * @brief Inset the rectangle by the same amount in both directions
+     *
+     * @param d Inset value for both X and Y
+     */
+    constexpr inline Rect inset(const double d) const {
+        return this->inset(d, d);
+    }
+
     Point origin;
     Size size;
 };

@@ -26,6 +26,7 @@ static void InitScreen(const std::shared_ptr<shittygui::Screen> &screen) {
     // create outer container
     auto cont = shittygui::MakeWidget<shittygui::widgets::Container>({0, 0}, {800, 480});
     cont->setDrawsBorder(false);
+    cont->setBorderRadius(0.);
     cont->setBackgroundColor({0, 0.125, 0});
 
     // left container

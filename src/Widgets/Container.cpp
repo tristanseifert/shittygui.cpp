@@ -17,20 +17,33 @@ using namespace shittygui::widgets;
  * We'll fill the background color and then draw an optional border.
  */
 void Container::draw(cairo_t *drawCtx, const bool everything) {
+    // set the path to use for border and rec
+    auto rect = this->getBounds();
+
+    if(this->borderRadius > 0) {
+        cairo::RoundedRect(drawCtx, rect, this->borderRadius);
+    } else {
+        cairo::Rectangle(drawCtx, rect);
+    }
+
     // fill background
     cairo::SetSource(drawCtx, this->background);
-    cairo_paint(drawCtx);
+    cairo_fill_preserve(drawCtx);
 
     // border
     if(this->drawBorder) {
-        const auto &bounds = this->getFrame();
-
         cairo::SetSource(drawCtx, this->border);
 
-        cairo_set_line_cap(drawCtx, CAIRO_LINE_CAP_BUTT);
+        if(this->borderRadius > 0) {
+            cairo_set_line_cap(drawCtx, CAIRO_LINE_CAP_ROUND);
+            cairo_set_line_join(drawCtx, CAIRO_LINE_JOIN_ROUND);
+        } else {
+            cairo_set_line_cap(drawCtx, CAIRO_LINE_CAP_BUTT);
+            cairo_set_line_join(drawCtx, CAIRO_LINE_JOIN_BEVEL);
+        }
+
         cairo_set_line_width(drawCtx, kBorderWidth);
-        cairo_rectangle(drawCtx, .5, .5, bounds.size.width - kBorderWidth,
-                bounds.size.height - kBorderWidth);
+
         cairo_stroke(drawCtx);
     }
 

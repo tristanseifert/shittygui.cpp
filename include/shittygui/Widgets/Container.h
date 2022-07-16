@@ -65,6 +65,19 @@ class Container: public Widget {
         inline auto getDrawsBorder() const {
             return this->drawBorder;
         }
+        /**
+         * @brief Set the radius of the container's border
+         */
+        inline void setBorderRadius(const double newRadius) {
+            this->borderRadius = newRadius;
+            this->needsDisplay();
+        }
+        /**
+         * @brief Get the current border radius
+         */
+        inline auto getBorderRadius() const {
+            return this->borderRadius;
+        }
 
     private:
         /// Width of the border, in pixels
@@ -73,7 +86,9 @@ class Container: public Widget {
         /// Background color
         Color background;
         /// Border color
-        Color border;
+        Color border{0, 1, 0};
+        /// Border corner radius
+        double borderRadius{5.};
 
         /// Whether the border shall be drawn
         bool drawBorder{true};
