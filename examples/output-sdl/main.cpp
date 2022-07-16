@@ -5,6 +5,7 @@
  */
 #include <shittygui/Screen.h>
 #include <shittygui/Widgets/Container.h>
+#include <shittygui/Widgets/Label.h>
 
 #include <SDL.h>
 
@@ -32,6 +33,26 @@ static void InitScreen(const std::shared_ptr<shittygui::Screen> &screen) {
     // left container
     auto left = shittygui::MakeWidget<shittygui::widgets::Container>({20, 20}, {360, 430});
     left->setBackgroundColor({0.33, 0, 0});
+
+    auto leftLabel = shittygui::MakeWidget<shittygui::widgets::Label>({2, 0}, {356, 45},
+            "Hello World!");
+    leftLabel->setFont("Avenir Next Bold", 24);
+    leftLabel->setTextAlign(shittygui::TextAlign::Center);
+    leftLabel->setTextColor({1, 1, 1});
+    left->addChild(leftLabel);
+
+    auto longLabel = shittygui::MakeWidget<shittygui::widgets::Label>({3, 45}, {354, 240});
+    longLabel->setContent(R"(I'm baby retro single-origin coffee stumptown small batch echo park, chicharrones tote bag vexillologist literally. Mlkshk intelligentsia shabby chic sustainable. Shabby chic copper mug helvetica DIY art party you probably haven't heard of them, humblebrag cloud bread adaptogen blog. Dreamcatcher wayfarers raw denim XOXO lyft disrupt jianbing tattooed 90's chia. Gluten-free post-ironic bushwick single-origin coffee brooklyn yes plz. Umami humblebrag shabby chic, selvage pok pok franzen church-key.
+
+Lomo photo booth single-origin coffee health goth raclette YOLO franzen unicorn vexillologist migas woke wolf irony. Retro ugh palo santo cray aesthetic fashion axe, pabst hashtag poutine. Meggings tbh schlitz, mixtape celiac viral la croix hammock offal squid brooklyn yr fam. Vice chambray kogi fashion axe selfies schlitz trust fund yes plz. Keytar lo-fi affogato pop-up slow-carb schlitz drinking vinegar cray pinterest. Fashion axe vice messenger bag scenester cold-pressed XOXO schlitz YOLO kombucha you probably haven't heard of them. Direct trade small batch pickled, enamel pin yes plz lumbersexual chartreuse forage iceland messenger bag prism.)");
+    longLabel->setFont("Liberation Sans", 11);
+    longLabel->setTextAlign(shittygui::TextAlign::Left);
+    longLabel->setWordWrap(true);
+    longLabel->setEllipsizeMode(shittygui::EllipsizeMode::Middle);
+    longLabel->setTextColor({0.9, 1, 1});
+
+    left->addChild(longLabel);
+
 
     cont->addChild(left);
 
