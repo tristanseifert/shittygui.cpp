@@ -21,8 +21,11 @@ using namespace shittygui;
  *        end of the list (when unset, default)instead of the end (default)
  */
 void Widget::addChild(const std::shared_ptr<Widget> &toAdd, const bool atStart) {
+    // validate the widget ptr
     if(!toAdd) {
         throw std::invalid_argument("invalid widget ptr");
+    } else if(toAdd.get() == this) {
+        throw std::invalid_argument("cannot add widget to itself");
     }
 
     // TODO: check whether adding it would form a loop in the widget tree
@@ -114,6 +117,9 @@ void Widget::drawChildren(cairo_t *drawCtx, const bool everything) {
 
     // translate coordinates to our origin
     cairo_save(drawCtx);
+
+    const auto &frame = this->getFrame();
+    cairo_translate(drawCtx, frame.origin.x, frame.origin.y);
 
     // process each child, in the order they were added
     for(const auto &child : this->children) {

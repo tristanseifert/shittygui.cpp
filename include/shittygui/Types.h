@@ -110,6 +110,32 @@ struct Rect {
     Point origin;
     Size size;
 };
+
+/**
+ * @brief Ellipsization mode
+ *
+ * Ellipsization is the process of inserting an ellipsis character (…) in a string of text that is
+ * too large to fit in the alotted space.
+ */
+enum class EllipsizeMode: uint8_t {
+    /// Do not insert an ellipsis anywhere
+    None,
+    /// Omit characters at the beginning of the text
+    Start,
+    /// Omit characters in the middle of the text
+    Middle,
+    /// Omit characters at the end of the text
+    End,
+};
+
+/**
+ * @brief Text layout alignment
+ */
+enum class TextAlign: uint8_t {
+    Left,
+    Center,
+    Right,
+};
 }
 
 #endif

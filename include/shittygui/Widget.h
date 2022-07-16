@@ -3,7 +3,7 @@
 
 #include <deque>
 #include <memory>
-#include <span>
+#include <utility>
 
 #include <shittygui/Types.h>
 
@@ -180,15 +180,16 @@ class Widget {
  * @brief Allocate a new widget
  *
  * @tparam T Widget type
+ * @tparam Args... Additional arguments for widget constructor
  *
  * @param origin Origin of the widget's frame
  * @param size Size of the widget's frame
  *
  * @return Initialized widget
  */
-template<typename T>
-std::shared_ptr<T> MakeWidget(const Point origin, const Size size) {
-    return std::make_shared<T>(Rect{origin, size});
+template<typename T, typename... Args>
+std::shared_ptr<T> MakeWidget(const Point origin, const Size size, Args&&... args) {
+    return std::make_shared<T>(Rect{origin, size}, std::forward<Args>(args)...);
 }
 
 /// Widget implementations

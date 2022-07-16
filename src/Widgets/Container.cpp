@@ -1,7 +1,3 @@
-#include <algorithm>
-#include <functional>
-#include <stdexcept>
-
 #include <cairo.h>
 
 #include "CairoHelpers.h"

@@ -86,7 +86,7 @@ int main(const int argc, const char **argv) {
     printf("Window size: %dx%d, drawable size %dx%d\n", windowW, windowH, renderW, renderH);
 
     // set up GUI library
-    screen = std::make_shared<shittygui::Screen>(shittygui::Screen::PixelFormat::ARGB32,
+    screen = std::make_shared<shittygui::Screen>(shittygui::Screen::PixelFormat::RGB24,
             kWindowSize);
     printf("framebuffer: %p (stride %lu bytes)\n", screen->getBuffer(), screen->getBufferStride());
 
@@ -96,7 +96,7 @@ int main(const int argc, const char **argv) {
 
     // set up texture to render into
     const auto &physSize = screen->getFramebufferSize();
-    auto inTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING,
+    auto inTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_BGRA32, SDL_TEXTUREACCESS_STREAMING,
             physSize.width, physSize.height);
 
     if(!inTex) {
