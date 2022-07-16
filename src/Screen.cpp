@@ -172,7 +172,7 @@ void Screen::redraw() {
 
     // apply UI scale
     if(this->scaled) {
-        const double factor{1./this->scaleFactor};
+        const double factor{this->scaleFactor};
         cairo_scale(this->drawCtx, factor, factor);
     }
 

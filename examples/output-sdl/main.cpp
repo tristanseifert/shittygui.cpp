@@ -106,10 +106,17 @@ int main(const int argc, const char **argv) {
 
     // set up GUI library
     screen = std::make_shared<shittygui::Screen>(shittygui::Screen::PixelFormat::RGB24,
-            kWindowSize);
+            shittygui::Size(renderW, renderH));
     printf("framebuffer: %p (stride %lu bytes)\n", screen->getBuffer(), screen->getBufferStride());
 
     screen->setBackgroundColor({0, 0.33, 0});
+
+    if(renderW != windowW) {
+        const double uiScale = static_cast<double>(renderW) / static_cast<double>(windowW);
+        printf("UI scale: %g\n", uiScale);
+
+        screen->setScaleFactor(uiScale);
+    }
 
     InitScreen(screen);
 

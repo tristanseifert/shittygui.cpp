@@ -123,15 +123,15 @@ class Widget: public std::enable_shared_from_this<Widget> {
         }
 
         /**
-         * @brief Invoked when the widget is added to a view hierarchy
+         * @brief Invoked when the widget is about to move to a new parent
          *
-         * @param newParent New parent widget
+         * @param parent Pointer to the widget's new parent
          */
-        virtual void adopted(const std::shared_ptr<Widget> &newParent);
+        virtual void willMoveToParent(const std::shared_ptr<Widget> &newParent);
         /**
-         * @brief Invoked when the widget is removed from the view hierarchy
+         * @brief Invoked when the widget moved to a new parent
          */
-        virtual void orphaned();
+        virtual void didMoveToParent();
 
         /**
          * @brief The frame rectangle of the widget has changed

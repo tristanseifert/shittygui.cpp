@@ -35,9 +35,7 @@ class Label: public Widget {
         /**
          * @brief Free all rendering resources belonging to the label.
          */
-        ~Label() {
-            this->releaseResources();
-        }
+        ~Label();
 
         /**
          * Labels are not opaque; they rely on the underlying view to fill its background when we
@@ -56,8 +54,8 @@ class Label: public Widget {
          * and we might get added to a different screen (with a different drawing context) this
          * is required.
          */
-        void orphaned() override {
-            Widget::orphaned();
+        void didMoveToParent() override {
+            Widget::didMoveToParent();
             this->releaseResources();
         }
 

@@ -34,7 +34,7 @@ void Widget::addChild(const std::shared_ptr<Widget> &toAdd, const bool atStart) 
     }
 
     // TODO: check whether adding it would form a loop in the widget tree
-    toAdd->removeFromParent();
+    toAdd->willMoveToParent(toAdd);
 
     if(atStart) {
         this->children.emplace_front(toAdd);
@@ -42,7 +42,8 @@ void Widget::addChild(const std::shared_ptr<Widget> &toAdd, const bool atStart) 
         this->children.emplace_back(toAdd);
     }
 
-    toAdd->adopted(this->shared_from_this());
+    toAdd->parent = this->shared_from_this();
+    toAdd->didMoveToParent();
 
     this->updateChildData();
 }
@@ -69,7 +70,12 @@ bool Widget::removeChild(const std::shared_ptr<Widget> &toRemove) {
         return (childPtr == toRemove);
     });
     // invoke the appropriate callback
-    std::for_each(removed.begin(), removed.end(), std::bind(&Widget::orphaned, _1));
+    std::for_each(removed.begin(), removed.end(), std::bind(&Widget::willMoveToParent, _1,
+                nullptr));
+    std::for_each(removed.begin(), removed.end(), std::bind(&Widget::didMoveToParent, _1));
+    std::for_each(removed.begin(), removed.end(), [](auto widget) {
+        widget->parent.reset();
+    });
 
     this->updateChildData();
 
@@ -91,7 +97,12 @@ bool Widget::removeFromParent() {
     transfer_if_not(ptr->children, removed, [this](auto &childPtr) {
         return (childPtr.get() == this);
     });
-    std::for_each(removed.begin(), removed.end(), std::bind(&Widget::orphaned, _1));
+    std::for_each(removed.begin(), removed.end(), std::bind(&Widget::willMoveToParent, _1,
+                nullptr));
+    std::for_each(removed.begin(), removed.end(), std::bind(&Widget::didMoveToParent, _1));
+    std::for_each(removed.begin(), removed.end(), [](auto widget) {
+        widget->parent.reset();
+    });
 
     this->updateChildData();
 
@@ -233,35 +244,28 @@ void Widget::didMoveToScreen(const std::shared_ptr<Screen> &screen) {
 }
 
 /**
- * @brief Invoked when the widget is added to a view hierarchy
- *
- * @param newParent New parent widget
+ * Remove the widget from the current animator as we're going to change parents soon.
+ */
+void Widget::willMoveToParent(const std::shared_ptr<Widget> &newParent) {
+    // remove from animator
+    if(auto anim = this->getAnimator()) {
+        anim->unregisterWidget(this->shared_from_this());
+        this->animatorRegistered = false;
+    }
+}
+
+/**
+ * Register the view with the animator if it wants animation.
  *
  * @remark When subclassing, you must always invoke the base widget class implementation of this
  *         method first.
  */
-void Widget::adopted(const std::shared_ptr<Widget> &newParent) {
-    this->parent = newParent;
-
+void Widget::didMoveToParent() {
     // install in animator
     if(this->wantsAnimation() && !this->animatorRegistered) {
         if(auto anim = this->getAnimator()) {
             anim->registerWidget(this->shared_from_this());
             this->animatorRegistered = true;
         }
-    }
-}
-
-/**
- * @brief Invoked when the widget is removed from the view hierarchy
- *
- * @remark When subclassing, you must always invoke the base widget class implementation of this
- *         method last.
- */
-void Widget::orphaned() {
-    // notify animator
-    if(auto anim = this->getAnimator()) {
-        anim->unregisterWidget(this->shared_from_this());
-        this->animatorRegistered = false;
     }
 }

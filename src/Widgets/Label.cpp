@@ -8,15 +8,22 @@
 using namespace shittygui::widgets;
 
 /**
- * @brief Clean up the label's allocated Pango resources
+ * @brief Free all rendering resources belonging to the label.
  */
-void Label::releaseResources() {
+Label::~Label() {
+    this->releaseResources();
+
     // release font descriptor
     if(this->fontDesc) {
         pango_font_description_free(this->fontDesc);
         this->fontDesc = nullptr;
     }
+}
 
+/**
+ * @brief Clean up the label's allocated Pango resources
+ */
+void Label::releaseResources() {
     // release text layout context
     if(this->layout) {
         g_object_unref(this->layout);
