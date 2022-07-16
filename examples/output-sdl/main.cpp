@@ -84,7 +84,7 @@ int main(const int argc, const char **argv) {
         return 1;
     }
 
-    auto renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
+    auto renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
     if(!renderer) {
         std::cerr << "SDL_CreateRenderer failed: " << SDL_GetError() << std::endl;
         return 1;
@@ -135,34 +135,36 @@ int main(const int argc, const char **argv) {
      * here simplifies the code considerably, but may lead to various graphical artifacts.
      */
     while(gRun) {
+        // process events
         SDL_Event e;
-        if(!SDL_WaitEvent(&e)) {
-            std::cerr << "SDL_WaitEvent failed: " << SDL_GetError() << std::endl;
-            return 1;
+
+        while(SDL_PollEvent(&e)) {
+            switch(e.type) {
+                // TODO: mouse movement
+                // TODO: mouse buttons
+                // TODO: key events
+
+                // terminate the application
+                case SDL_QUIT:
+                    gRun = false;
+                    break;
+            }
         }
 
-        // process the event
-        switch(e.type) {
-            // TODO: mouse movement
-            // TODO: mouse buttons
-            // TODO: key events
-
-            // terminate the application
-            case SDL_QUIT:
-                gRun = false;
-                break;
-        }
+        // frame drawing callback
+        screen->handleAnimations();
 
         // redraw the screen, if it indicates that it's dirty. this is slow and shitty (lol)
         if(screen->isDirty()) {
             screen->redraw();
 
             SDL_UpdateTexture(inTex, nullptr, screen->getBuffer(), screen->getBufferStride());
-
-            SDL_RenderClear(renderer);
-            SDL_RenderCopy(renderer, inTex, nullptr, nullptr);
-            SDL_RenderPresent(renderer);
         }
+
+        // update display
+        SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, inTex, nullptr, nullptr);
+        SDL_RenderPresent(renderer);
     }
 
     // clean up

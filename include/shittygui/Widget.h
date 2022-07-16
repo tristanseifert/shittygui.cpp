@@ -59,21 +59,17 @@ class Widget {
          * Widgets should keep track of their internal "dirty" state. When their state changes,
          * they should mark themselves as dirty (and update parents)
          *
-         * This basic implementation uses a boolean flag that's set by `needsDisplay`.
+         * This basic implementation uses a boolean flag that's set by `needsDisplay` as well as
+         * if any child widgets become dirty.
          *
          * @remark Even if this method returns `false` you may still receive draw events
          */
         virtual bool isDirty() {
-            return this->dirtyFlag;
+            return this->dirtyFlag || this->childrenDirtyFlag;
         }
 
-        /**
-         * @brief Mark the widget as dirty
-         *
-         * This routine is invoked by other code in the GUI layer to mark this widget as needing
-         * to be redrawn.
-         */
         virtual void needsDisplay();
+        virtual void needsChildDisplay();
 
         /**
          * @brief Draw the widget
@@ -113,6 +109,11 @@ class Widget {
         virtual void orphaned() {}
 
         /**
+         * @brief The frame rectangle of the widget has changed
+         */
+        virtual void frameDidChange() {}
+
+        /**
          * @brief Get the frame rectangle of the widget
          */
         constexpr inline auto getFrame() const {
@@ -129,6 +130,7 @@ class Widget {
             this->frame = newFrame;
             this->bounds = {{0, 0}, newFrame.size};
             this->needsDisplay();
+            this->frameDidChange();
         }
         /**
          * @brief Get the bounds rectangle of the widget
@@ -136,6 +138,9 @@ class Widget {
         constexpr inline auto getBounds() const {
             return this->bounds;
         }
+
+    private:
+        void updateChildData();
 
     protected:
         /**
@@ -149,13 +154,6 @@ class Widget {
         std::weak_ptr<Widget> parent;
 
         /**
-         * @brief Child widgets
-         *
-         * Pointers to all children added to widget.
-         */
-        std::deque<std::shared_ptr<Widget>> children;
-
-        /**
          * @brief Frame rectangle
          */
         Rect frame;
@@ -163,6 +161,14 @@ class Widget {
          * @brief Bounds rectangle
          */
         Rect bounds;
+
+    private:
+        /**
+         * @brief Child widgets
+         *
+         * Pointers to all children added to widget.
+         */
+        std::deque<std::shared_ptr<Widget>> children;
 
         /**
          * @brief Dirty indicator
@@ -173,7 +179,23 @@ class Widget {
          * @seeAlso needsDisplay
          * @seeAlso isDirty
          */
-        bool dirtyFlag{false};
+        uintptr_t dirtyFlag                     :1{false};
+
+        /**
+         * @brief Children need redraw
+         *
+         * Set when any of this widget's children become dirtied. This flag is propagated up from
+         * the widget that dirtied; that is, all ancestors of that widget will have this flag set.
+         */
+        uintptr_t childrenDirtyFlag             :1{false};
+
+        /**
+         * @brief Are any children not opaque?
+         *
+         * This flag is updated any time children are added or removed from this widget. It's used
+         * to optimize drawing.
+         */
+        uintptr_t hasTransparentChildren        :1{false};
 };
 
 /**

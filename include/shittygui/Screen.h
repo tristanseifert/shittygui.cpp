@@ -91,7 +91,7 @@ class Screen {
          *
          * @param newRoot Widget to set as the root
          */
-        void setRootWidget(const std::shared_ptr<Widget> &newRoot) {
+        inline void setRootWidget(const std::shared_ptr<Widget> &newRoot) {
             this->rootWidget = newRoot;
             this->needsDisplay();
         }
@@ -105,6 +105,7 @@ class Screen {
         }
 
         void redraw();
+        void handleAnimations();
 
         /**
          * @brief Set the screen's background color

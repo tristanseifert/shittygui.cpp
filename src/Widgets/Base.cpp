@@ -38,6 +38,8 @@ void Widget::addChild(const std::shared_ptr<Widget> &toAdd, const bool atStart) 
     }
 
     toAdd->adopted(this);
+
+    this->updateChildData();
 }
 
 /**
@@ -64,6 +66,8 @@ bool Widget::removeChild(const std::shared_ptr<Widget> &toRemove) {
     // invoke the appropriate callback
     std::for_each(removed.begin(), removed.end(), std::bind(&Widget::orphaned, _1));
 
+    this->updateChildData();
+
     return !removed.empty();
 }
 
@@ -84,7 +88,20 @@ bool Widget::removeFromParent() {
     });
     std::for_each(removed.begin(), removed.end(), std::bind(&Widget::orphaned, _1));
 
+    this->updateChildData();
+
     return !removed.empty();
+}
+
+/**
+ * @brief Updates cached child data after modifying the child list
+ */
+void Widget::updateChildData() {
+    using namespace std::placeholders;
+
+    // transparency optimizations
+    this->hasTransparentChildren = !std::all_of(this->children.begin(), this->children.end(),
+            std::bind(&Widget::isOpaque, _1));
 }
 
 
@@ -149,6 +166,8 @@ void Widget::drawChildren(cairo_t *drawCtx, const bool everything) {
 
     // restore original coordinate system
     cairo_restore(drawCtx);
+
+    this->childrenDirtyFlag = false;
 }
 
 /**
@@ -162,8 +181,21 @@ void Widget::drawChildren(cairo_t *drawCtx, const bool everything) {
  */
 void Widget::needsDisplay() {
     if(auto ptr = this->parent.lock()) {
-        ptr->needsDisplay();
+        ptr->needsChildDisplay();
     }
 
     this->dirtyFlag = true;
+}
+
+/**
+ * @brief Indicates this widget's children need to be redrawn
+ *
+ * Internally invoked by the GUI layer on all ancestors of a dirty widget.
+ */
+void Widget::needsChildDisplay() {
+    if(auto ptr = this->parent.lock()) {
+        ptr->needsChildDisplay();
+    }
+
+    this->childrenDirtyFlag = true;
 }

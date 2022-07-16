@@ -180,3 +180,13 @@ void Screen::redraw() {
 
     cairo_restore(this->drawCtx);
 }
+
+/**
+ * @brief Handle animations
+ *
+ * Invoke this method periodically (such as from a VBlank/display buffer page flip handler) from
+ * the UI thread to drive animations.
+ */
+void Screen::handleAnimations() {
+
+}
