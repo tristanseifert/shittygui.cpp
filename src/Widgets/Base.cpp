@@ -4,6 +4,7 @@
 
 #include <cairo.h>
 
+#include "Animator.h"
 #include "CairoHelpers.h"
 #include "Errors.h"
 #include "Util.h"
@@ -15,6 +16,10 @@ using namespace shittygui;
  * @brief Add a new widget as a child
  *
  * The given widget is added to our children list, and its callbacks are invoked.
+ *
+ * @remark A widget hierarchy should be built from the top down. That is, create the root view
+ *         first and associate it with a screen. Then, add subviews of the root view to it; then
+ *         add those subviews to it, and so forth.
  *
  * @param toAdd Widget to add
  * @param atStart Insert the widget at the start of the child list (when set) rather than at the
@@ -37,7 +42,7 @@ void Widget::addChild(const std::shared_ptr<Widget> &toAdd, const bool atStart) 
         this->children.emplace_back(toAdd);
     }
 
-    toAdd->adopted(this);
+    toAdd->adopted(this->shared_from_this());
 
     this->updateChildData();
 }
@@ -102,6 +107,7 @@ void Widget::updateChildData() {
     // transparency optimizations
     this->hasTransparentChildren = !std::all_of(this->children.begin(), this->children.end(),
             std::bind(&Widget::isOpaque, _1));
+    this->childrenDirtyFlag = true;
 }
 
 
@@ -141,7 +147,7 @@ void Widget::drawChildren(cairo_t *drawCtx, const bool everything) {
     // process each child, in the order they were added
     for(const auto &child : this->children) {
         // if the child is dirty, draw it
-        if(!child->isDirty() || everything) {
+        if(child->isDirty() || everything) {
             const auto &childFrame = child->getFrame();
 
             cairo_save(drawCtx);
@@ -180,7 +186,7 @@ void Widget::drawChildren(cairo_t *drawCtx, const bool everything) {
  *         as it is used to propagate dirtiness up the view hierarchy.
  */
 void Widget::needsDisplay() {
-    if(auto ptr = this->parent.lock()) {
+    if(auto ptr = this->getParent()) {
         ptr->needsChildDisplay();
     }
 
@@ -193,9 +199,43 @@ void Widget::needsDisplay() {
  * Internally invoked by the GUI layer on all ancestors of a dirty widget.
  */
 void Widget::needsChildDisplay() {
-    if(auto ptr = this->parent.lock()) {
+    if(auto ptr = this->getParent()) {
         ptr->needsChildDisplay();
     }
 
     this->childrenDirtyFlag = true;
+}
+
+
+
+/**
+ * @brief Invoked when the widget is added to a view hierarchy
+ *
+ * @param newParent New parent widget
+ *
+ * @remark When subclassing, you must always invoke the base widget class implementation of this
+ *         method first.
+ */
+void Widget::adopted(const std::shared_ptr<Widget> &newParent) {
+    this->parent = newParent;
+
+    // install in animator
+    if(this->wantsAnimation()) {
+        if(auto anim = this->getAnimator()) {
+            anim->registerWidget(this->shared_from_this());
+        }
+    }
+}
+
+/**
+ * @brief Invoked when the widget is removed from the view hierarchy
+ *
+ * @remark When subclassing, you must always invoke the base widget class implementation of this
+ *         method last.
+ */
+void Widget::orphaned() {
+    // notify animator
+    if(auto anim = this->getAnimator()) {
+        anim->unregisterWidget(this->shared_from_this());
+    }
 }

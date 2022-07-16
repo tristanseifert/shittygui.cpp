@@ -2,6 +2,7 @@
 
 #include <cairo.h>
 
+#include "Animator.h"
 #include "CairoHelpers.h"
 #include "Errors.h"
 #include "Screen.h"
@@ -109,6 +110,9 @@ void Screen::commonInit() {
 
     // optimize rendering for performance
     cairo_set_antialias(this->drawCtx, CAIRO_ANTIALIAS_FAST);
+
+    // prepare animation resources
+    this->anim = std::make_shared<Animator>(this);
 }
 
 /**
@@ -138,6 +142,23 @@ void *Screen::getBuffer() {
  */
 size_t Screen::getBufferStride() const {
     return cairo_image_surface_get_stride(this->surface);
+}
+
+/**
+ * @brief Determine if the screen is dirty
+ *
+ * This checks our internal dirty flag, plus the dirty flag of the root view.
+ */
+bool Screen::isDirty() const {
+    if(this->dirtyFlag || this->forceDisplayFlag) {
+        return true;
+    }
+
+    if(this->rootWidget) {
+        return this->rootWidget->isDirty();
+    }
+
+    return false;
 }
 
 /**
@@ -188,5 +209,24 @@ void Screen::redraw() {
  * the UI thread to drive animations.
  */
 void Screen::handleAnimations() {
+    this->anim->frameCallback();
+}
 
+/**
+ * @brief Update the root widget of the screen
+ *
+ * Replace the existing root widget with this new widget, then invalidate the screen so
+ * it's redrawn.
+ *
+ * @param newRoot Widget to set as the root
+ */
+void Screen::setRootWidget(const std::shared_ptr<Widget> &newRoot) {
+    if(this->rootWidget) {
+        this->rootWidget->moveToScreen(nullptr);
+        this->rootWidget.reset();
+    }
+
+    newRoot->moveToScreen(this->shared_from_this());
+    this->rootWidget = newRoot;
+    this->needsDisplay();
 }

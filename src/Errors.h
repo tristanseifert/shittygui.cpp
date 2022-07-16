@@ -30,6 +30,12 @@ inline void ThrowForCairoStatus(const cairo_status_t status) {
             throw std::runtime_error("invalid format");
         case CAIRO_STATUS_INVALID_VISUAL:
             throw std::runtime_error("invalid visual");
+        case CAIRO_STATUS_INVALID_MATRIX:
+            throw std::runtime_error("invalid matrix");
+        case CAIRO_STATUS_PATTERN_TYPE_MISMATCH:
+            throw std::runtime_error("pattern type mismatch");
+        case CAIRO_STATUS_INVALID_MESH_CONSTRUCTION:
+            throw std::runtime_error("invalid pattern mesh construction");
 
         default:
             throw std::runtime_error("unknown cairo error");

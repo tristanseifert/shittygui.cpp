@@ -57,6 +57,7 @@ class Label: public Widget {
          * is required.
          */
         void orphaned() override {
+            Widget::orphaned();
             this->releaseResources();
         }
 

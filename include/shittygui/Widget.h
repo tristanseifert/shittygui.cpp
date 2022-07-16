@@ -5,9 +5,13 @@
 #include <memory>
 #include <utility>
 
+#include <shittygui/Screen.h>
 #include <shittygui/Types.h>
 
 namespace shittygui {
+class Animator;
+class Screen;
+
 /**
  * @brief Base widget class
  *
@@ -20,7 +24,7 @@ namespace shittygui {
  * with the origin of the widget.) On the other hand, the frame specifies an origin relative to the
  * parent of the widget.
  */
-class Widget {
+class Widget: public std::enable_shared_from_this<Widget> {
     public:
         /**
          * @brief Initialize a widget with the given frame
@@ -41,6 +45,16 @@ class Widget {
          */
         virtual bool isOpaque() {
             return true;
+        }
+
+        /**
+         * @brief Does the widget desire animation?
+         *
+         * When set, the widget is opted into animation support. This means it may receive a
+         * callback after every frame is rendered from the animator to update its state.
+         */
+        virtual bool wantsAnimation() {
+            return false;
         }
 
         /**
@@ -86,6 +100,15 @@ class Widget {
         }
         virtual void drawChildren(struct _cairo *drawCtx, const bool everything = false);
 
+        /**
+         * @brief Process an animation frame
+         *
+         * This is invoked by the animator any time a frame is rendered.
+         *
+         * @seeAlso Screen::handleAnimations()
+         */
+        virtual void processAnimationFrame() {}
+
         void addChild(const std::shared_ptr<Widget> &toAdd, const bool atStart = false);
         bool removeChild(const std::shared_ptr<Widget> &toRemove);
         bool removeFromParent();
@@ -102,11 +125,11 @@ class Widget {
          *
          * @param newParent New parent widget
          */
-        virtual void adopted(Widget *newParent) {}
+        virtual void adopted(const std::shared_ptr<Widget> &newParent);
         /**
          * @brief Invoked when the widget is removed from the view hierarchy
          */
-        virtual void orphaned() {}
+        virtual void orphaned();
 
         /**
          * @brief The frame rectangle of the widget has changed
@@ -139,20 +162,67 @@ class Widget {
             return this->bounds;
         }
 
+        /**
+         * @brief The widget is moving to a new screen
+         *
+         * @remark This routine is invoked only on the root widget. It is useless in any child
+         *         widgets.
+         */
+        inline void moveToScreen(const std::shared_ptr<Screen> &newScreen) {
+            this->screen = newScreen;
+        }
+
+    protected:
+        /**
+         * @brief Get the parent of this widget
+         *
+         * If the widget is the root widget, it will have no parent. Instead, its screen pointer is
+         * set to the screen it is on, if any.
+         */
+        inline std::shared_ptr<Widget> getParent() {
+            return this->parent.lock();
+        }
+
+        /**
+         * @brief Find the animator responsible for this widget's screen
+         *
+         * Locate the screen this widget is on, then return its animator. The animator is used by widgets
+         * which want to animate their display to receive periodic callbacks.
+         */
+        inline std::shared_ptr<Animator> getAnimator() {
+            auto screen = this->getScreen();
+            if(!screen) {
+                return nullptr;
+            }
+
+            return screen->getAnimator();
+        }
+
+        /**
+         * @brief Get the screen this widget is currently on
+         */
+        inline std::shared_ptr<Screen> getScreen() {
+            // get the root widget
+            if(auto parent = this->getParent()) {
+                std::shared_ptr<Widget> next = parent;
+
+                do {
+                    parent = next;
+                    next = next->getParent();
+                } while(next);
+
+                return parent->getScreen();
+            }
+            // we're the root, so return the screen ptr
+            else {
+                return this->screen.lock();
+            }
+        }
+
     private:
         void updateChildData();
 
     protected:
-        /**
-         * @brief Parent widget
-         *
-         * The parent widget is the widget that contains this one. This may be null if this widget
-         * has not been added to the view hierarchy, or if it's the root widget.
-         *
-         * Keep a weak reference as to prevent retain cycles.
-         */
-        std::weak_ptr<Widget> parent;
-
         /**
          * @brief Frame rectangle
          */
@@ -161,14 +231,6 @@ class Widget {
          * @brief Bounds rectangle
          */
         Rect bounds;
-
-    private:
-        /**
-         * @brief Child widgets
-         *
-         * Pointers to all children added to widget.
-         */
-        std::deque<std::shared_ptr<Widget>> children;
 
         /**
          * @brief Dirty indicator
@@ -196,6 +258,31 @@ class Widget {
          * to optimize drawing.
          */
         uintptr_t hasTransparentChildren        :1{false};
+
+    private:
+        /**
+         * @brief Parent widget
+         *
+         * The parent widget is the widget that contains this one. This may be null if this widget
+         * has not been added to the view hierarchy, or if it's the root widget.
+         *
+         * Keep a weak reference as to prevent retain cycles.
+         */
+        std::weak_ptr<Widget> parent;
+
+        /**
+         * @brief Current screen
+         *
+         * Set for the root widget in a widget hierarchy when it's added to a screen.
+         */
+        std::weak_ptr<Screen> screen;
+
+        /**
+         * @brief Child widgets
+         *
+         * Pointers to all children added to widget.
+         */
+        std::deque<std::shared_ptr<Widget>> children;
 };
 
 /**

@@ -30,9 +30,12 @@ static void InitScreen(const std::shared_ptr<shittygui::Screen> &screen) {
     cont->setBorderRadius(0.);
     cont->setBackgroundColor({0, 0.125, 0});
 
+    screen->setRootWidget(cont);
+
     // left container
     auto left = shittygui::MakeWidget<shittygui::widgets::Container>({20, 20}, {360, 430});
     left->setBackgroundColor({0.33, 0, 0});
+    cont->addChild(left);
 
     auto leftLabel = shittygui::MakeWidget<shittygui::widgets::Label>({2, 0}, {356, 45},
             "Hello World!");
@@ -54,16 +57,11 @@ Lomo photo booth single-origin coffee health goth raclette YOLO franzen unicorn 
     left->addChild(longLabel);
 
 
-    cont->addChild(left);
-
     // right container
     auto right = shittygui::MakeWidget<shittygui::widgets::Container>({420, 20}, {360, 430});
     right->setBackgroundColor({0, 0, 0.33});
-
     cont->addChild(right);
 
-    // set container as root
-    screen->setRootWidget(cont);
 }
 
 /**

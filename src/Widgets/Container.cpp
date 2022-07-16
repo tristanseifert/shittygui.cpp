@@ -13,6 +13,10 @@ using namespace shittygui::widgets;
  * We'll fill the background color and then draw an optional border.
  */
 void Container::draw(cairo_t *drawCtx, const bool everything) {
+    if(!this->dirtyFlag) {
+        return;
+    }
+
     // set the path to use for border and rec
     auto rect = this->getBounds();
 

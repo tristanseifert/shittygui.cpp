@@ -90,6 +90,7 @@ configure_file(${CMAKE_CURRENT_LIST_DIR}/src/version.c.in ${VERSION_FILE} @ONLY)
 # Main library
 add_library(shittygui STATIC
     ${VERSION_FILE}
+    src/Animator.cpp
     src/Screen.cpp
     src/Widgets/Base.cpp
     src/Widgets/Container.cpp

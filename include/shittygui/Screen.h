@@ -9,6 +9,7 @@
 #include <shittygui/Types.h>
 
 namespace shittygui {
+class Animator;
 class Widget;
 
 /**
@@ -18,7 +19,7 @@ class Widget;
  * handle the lifecycle of controls, and draw controls (as needed, based on their dirty flags) into
  * their underlying framebuffer.
  */
-class Screen {
+class Screen: public std::enable_shared_from_this<Screen> {
     public:
         enum class PixelFormat {
             /// 24-bit color in a 32-bit value; upper 8 bits alpha, premultiplied
@@ -68,33 +69,14 @@ class Screen {
             this->scaled = true;
         }
 
-        /**
-         * @brief Determine if the screen needs to be redrawn
-         *
-         * The screen is dirtied if any of the components in the widget hierarchy become dirty,
-         * usually in response to some sort of external event.
-         */
-        inline bool isDirty() const {
-            return this->dirtyFlag;
-        }
+        bool isDirty() const;
         /// Mark the screen as needing to be redrawn
         inline void needsDisplay() {
             this->forceDisplayFlag = true;
             this->dirtyFlag = true;
         }
 
-        /**
-         * @brief Update the root widget of the screen
-         *
-         * Replace the existing root widget with this new widget, then invalidate the screen so
-         * it's redrawn.
-         *
-         * @param newRoot Widget to set as the root
-         */
-        inline void setRootWidget(const std::shared_ptr<Widget> &newRoot) {
-            this->rootWidget = newRoot;
-            this->needsDisplay();
-        }
+        void setRootWidget(const std::shared_ptr<Widget> &newRoot);
         /**
          * @brief Get the current root widget
          *
@@ -102,6 +84,13 @@ class Screen {
          */
         inline auto getRootWidget() {
             return this->rootWidget;
+        }
+
+        /**
+         * @brief Get the animator instance
+         */
+        inline auto &getAnimator() {
+            return this->anim;
         }
 
         void redraw();
@@ -144,12 +133,15 @@ class Screen {
         /// Root widget, which receives all events and draw requests
         std::shared_ptr<Widget> rootWidget;
 
+        /// Animation coordinator instance
+        std::shared_ptr<Animator> anim;
+
         /// Set when any widget in this screen becomes dirty
-        bool dirtyFlag{false};
+        uintptr_t dirtyFlag                     :1{false};
         /// Set to force rendering of _all_ widgets regardless of dirty status
-        bool forceDisplayFlag{false};
+        uintptr_t forceDisplayFlag              :1{false};
         /// Whether the screen applies UI scaling
-        bool scaled{false};
+        uintptr_t scaled                        :1{false};
 };
 }
 
