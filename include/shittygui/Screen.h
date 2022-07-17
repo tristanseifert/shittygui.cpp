@@ -34,6 +34,22 @@ class Screen: public std::enable_shared_from_this<Screen> {
             RGB30,
         };
 
+        /**
+         * @brief Rotation of the logical framebuffer
+         *
+         * This enum defines various cases of rotation (in 90° increments) for the logical display
+         * screen on the physical framebuffer. (Such a feature is useful for displays that are
+         * scanned out in one orientation, but are mounted at another: for example, a portrait
+         * smartphone display mounted in landscape orientation.)
+         */
+        enum class Rotation {
+            /// No rotation, the physical framebuffer and logical framebuffer are the same
+            None,
+            Rotate90,
+            Rotate180,
+            Rotate270,
+        };
+
         Screen(const PixelFormat format, const Size &size);
         Screen(const PixelFormat format, const Size &size, std::span<std::byte> framebuffer,
                 const size_t stride);
@@ -69,6 +85,31 @@ class Screen: public std::enable_shared_from_this<Screen> {
         inline void setScaleFactor(const double scale) {
             this->scaleFactor = scale;
             this->scaled = true;
+            this->needsDisplay();
+        }
+
+        /**
+         * @brief Set the logiccal framebuffer rotation
+         *
+         * The logical rotation is converted to a translation matrix that appropriately rotates the
+         * drawing context during rendering.
+         */
+        inline void setRotation(const Rotation newRotation) {
+            this->rotation = newRotation;
+
+            if(this->rotation == Rotation::Rotate90 || this->rotation == Rotation::Rotate270) {
+                this->size = {this->physSize.height, this->physSize.width};
+            } else {
+                this->size = this->physSize;
+            }
+
+            this->needsDisplay();
+        }
+        /**
+         * @brief Get the current display rotation
+         */
+        constexpr inline auto getRotation() const {
+            return this->rotation;
         }
 
         bool isDirty() const;
@@ -124,6 +165,8 @@ class Screen: public std::enable_shared_from_this<Screen> {
         Size size;
         /// User interface scale factor
         double scaleFactor{1.};
+        /// Display rotation
+        Rotation rotation{Rotation::None};
 
         /// Underlying Cairo rendering surface
         struct _cairo_surface *surface{nullptr};
