@@ -147,6 +147,38 @@ class Button: public Widget, protected TextRendering {
             return this->ig;
         }
 
+        /**
+         * @brief Set the width of the border
+         *
+         * @param newWidth New border width; set to 0 to disable.
+         */
+        inline void setBorderWidth(const double newWidth) {
+            this->borderWidth = std::max(0., newWidth);
+            this->needsDisplay();
+        }
+        /**
+         * @brief Get the width of the border
+         */
+        constexpr inline auto getBorderWidth() const {
+            return this->borderWidth;
+        }
+
+        /**
+         * @brief Set the color of the border
+         *
+         * @param normalColor new border color
+         */
+        inline void setBorderColor(const Color &normalColor) {
+            this->borderColor = normalColor;
+            this->needsDisplay();
+        }
+        /**
+         * @brief Get the current border color
+         */
+        constexpr inline auto &getBorderColor() const {
+            return this->borderColor;
+        }
+
     private:
         void releaseResources();
 

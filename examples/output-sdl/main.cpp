@@ -7,6 +7,7 @@
 #include <shittygui/Screen.h>
 #include <shittygui/Widgets/Button.h>
 #include <shittygui/Widgets/Container.h>
+#include <shittygui/Widgets/ImageView.h>
 #include <shittygui/Widgets/Label.h>
 #include <shittygui/Widgets/ProgressBar.h>
 
@@ -71,6 +72,7 @@ Lomo photo booth single-origin coffee health goth raclette YOLO franzen unicorn 
     normalBar->setProgress(.5);
     right->addChild(normalBar);
 
+    // buttons
     auto butt = shittygui::MakeWidget<shittygui::widgets::Button>({5, 300}, {150, 38},
             shittygui::widgets::Button::Type::Push);
     butt->setTitle("Push me");
@@ -86,6 +88,34 @@ Lomo photo booth single-origin coffee health goth raclette YOLO franzen unicorn 
     butt2->setIcon(plantImg);
 
     right->addChild(butt2);
+
+    // image views
+    auto pyramid = shittygui::Image::Read("./egyptian_pyramid.png");
+    auto spectrum = shittygui::Image::Read("./spectrum.png");
+    auto tree = shittygui::Image::Read("./tree.png");
+
+    right->addChild(shittygui::MakeWidget<shittygui::widgets::ImageView>({5, 200}, {48, 48},
+            pyramid, shittygui::widgets::ImageView::Mode::None));
+    right->addChild(shittygui::MakeWidget<shittygui::widgets::ImageView>({58, 200}, {16, 16},
+            pyramid, shittygui::widgets::ImageView::Mode::None));
+    right->addChild(shittygui::MakeWidget<shittygui::widgets::ImageView>({58, 224}, {16, 16},
+            pyramid, shittygui::widgets::ImageView::Mode::ScaleProportionalDown));
+    right->addChild(shittygui::MakeWidget<shittygui::widgets::ImageView>({79, 200}, {48, 64},
+            pyramid, shittygui::widgets::ImageView::Mode::ScaleIndependently));
+    right->addChild(shittygui::MakeWidget<shittygui::widgets::ImageView>({132, 200}, {48, 64},
+            pyramid, shittygui::widgets::ImageView::Mode::ScaleProportionalUpDown));
+
+    auto borderlessImg = shittygui::MakeWidget<shittygui::widgets::ImageView>({185, 200}, {32, 32},
+            spectrum, shittygui::widgets::ImageView::Mode::None);
+    borderlessImg->setBorderWidth(0);
+    borderlessImg->setBackgroundColor({0, 0, 0, 0});
+    right->addChild(borderlessImg);
+
+    auto borderlessImg2 = shittygui::MakeWidget<shittygui::widgets::ImageView>({185, 232}, {32, 32},
+            tree, shittygui::widgets::ImageView::Mode::None);
+    borderlessImg2->setBorderWidth(0);
+    borderlessImg2->setBackgroundColor({0, 0, 0, 0});
+    right->addChild(borderlessImg2);
 
     cont->addChild(right);
     screen->setRootWidget(cont);
