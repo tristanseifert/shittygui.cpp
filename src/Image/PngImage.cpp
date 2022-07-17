@@ -96,27 +96,83 @@ void PngImage::doPngRead(FILE *fp, const size_t sigBytesRead) {
     const auto numPasses = png_set_interlace_handling(pngPtr);
     png_read_update_info(pngPtr, infoPtr);
 
-    // create a surface
-    this->surface = cairo_image_surface_create(
-            (type == PNG_COLOR_TYPE_RGB) ? CAIRO_FORMAT_RGB24 : CAIRO_FORMAT_ARGB32, width,height);
-    auto status = cairo_surface_status(this->surface);
+    // allocate a framebuffer
+    cairo_format_t surfaceFormat = (type == PNG_COLOR_TYPE_RGB) ? CAIRO_FORMAT_RGB24 :
+        CAIRO_FORMAT_ARGB32;
+    const auto surfaceStride = cairo_format_stride_for_width(surfaceFormat, width);
 
-    if(status != CAIRO_STATUS_SUCCESS) {
-        ThrowForCairoStatus(status);
+    this->framebuffer.resize(surfaceStride * height);
+
+    /*
+     * Install a transformation function
+     *
+     * This function will convert the existing PNG data (in RGB/RGBA) order to the native byte
+     * order used by Cairo. If the image has transparency, colors will be converted to
+     * premultiplied as well.
+     */
+    if(type == PNG_COLOR_TYPE_RGBA) {
+        // pre-multiply alpha for each pixel and swap byte order
+        png_set_read_user_transform_fn(pngPtr, [](auto png, auto rowInfo, auto data) {
+            for(size_t i = 0; i < rowInfo->rowbytes; i += 4) {
+                uint8_t *base  = &data[i];
+                uint8_t  alpha = base[3];
+                uint32_t p;
+
+                if(alpha == 0) {
+                    p = 0;
+                } else {
+                    uint8_t  red   = base[0];
+                    uint8_t  green = base[1];
+                    uint8_t  blue  = base[2];
+
+                    if(alpha != 0xff) {
+                        red   = MultiplyAlpha(alpha, red);
+                        green = MultiplyAlpha(alpha, green);
+                        blue  = MultiplyAlpha(alpha, blue);
+                    }
+                    p = (alpha << 24) | (red << 16) | (green << 8) | (blue << 0);
+                }
+
+                memcpy(base, &p, sizeof(p));
+            }
+        });
+    } else {
+        // this just swaps byte order
+        png_set_read_user_transform_fn(pngPtr, [](auto png, auto rowInfo, auto data) {
+            for (size_t i = 0; i < rowInfo->rowbytes; i += 4) {
+                uint8_t *base  = &data[i];
+                uint8_t  red   = base[0];
+                uint8_t  green = base[1];
+                uint8_t  blue  = base[2];
+
+                uint32_t pixel = (0xff << 24) | (red << 16) | (green << 8) | (blue << 0);
+                memcpy(base, &pixel, sizeof(pixel));
+            }
+        });
     }
 
     // set up row pointers into the surface
     std::vector<void *> rowPtrs;
     rowPtrs.resize(height, nullptr);
 
-    auto surfaceBase = cairo_image_surface_get_data(this->surface);
-    const auto surfaceStride = cairo_image_surface_get_stride(this->surface);
+    auto surfaceBase = reinterpret_cast<uint8_t *>(this->framebuffer.data());
 
     for(size_t y = 0; y < height; y++) {
         rowPtrs[y] = surfaceBase + (surfaceStride * y);
     }
 
+    // read the image
     png_read_image(pngPtr, reinterpret_cast<png_bytep *>(rowPtrs.data()));
+    png_read_end(pngPtr, infoPtr);
+
+    // create a surface
+    this->surface = cairo_image_surface_create_for_data(surfaceBase, surfaceFormat, width, height,
+            surfaceStride);
+    auto status = cairo_surface_status(this->surface);
+
+    if(status != CAIRO_STATUS_SUCCESS) {
+        ThrowForCairoStatus(status);
+    }
 
     // clean up
     png_destroy_read_struct(&pngPtr, &infoPtr, nullptr);

@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <filesystem>
+#include <vector>
 
 #include <shittygui/Types.h>
 #include <shittygui/Image.h>
@@ -35,9 +36,19 @@ class PngImage: public Image {
     private:
         void doPngRead(FILE *, const size_t);
 
+        /**
+         * @brief Convert to premultiplied alpha
+         */
+        constexpr static inline int MultiplyAlpha(const int alpha, const int color) {
+            int temp = (alpha * color) + 0x80;
+            return ((temp + (temp >> 8)) >> 8);
+        }
+
     private:
         /// The underlying Cairo surface (of image surface typoe) the image is loaded into
         struct _cairo_surface *surface{nullptr};
+        /// Buffer to hold the read image bitmap data
+        std::vector<std::byte> framebuffer;
 };
 }
 
