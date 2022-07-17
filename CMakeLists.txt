@@ -92,6 +92,7 @@ add_library(shittygui STATIC
     ${VERSION_FILE}
     src/Animator.cpp
     src/Screen.cpp
+    src/TextRendering.cpp
     src/Widgets/Base.cpp
     src/Widgets/Container.cpp
     src/Widgets/Label.cpp

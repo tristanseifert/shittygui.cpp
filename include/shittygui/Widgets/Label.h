@@ -8,6 +8,7 @@
 
 #include <shittygui/Widget.h>
 #include <shittygui/Types.h>
+#include <shittygui/TextRendering.h>
 
 namespace shittygui::widgets {
 /**
@@ -17,7 +18,7 @@ namespace shittygui::widgets {
  * and the text may be optionally wrapped to fit in the available space.
  *
  */
-class Label: public Widget {
+class Label: public Widget, protected TextRendering {
     public:
         /**
          * @brief Initialize a label with the given frame
@@ -162,17 +163,13 @@ class Label: public Widget {
         TextAlign align{TextAlign::Left};
         /// Ellipsization mode
         EllipsizeMode ellipsizationMode{EllipsizeMode::End};
-
         /// Text foreground color
         Color foreground;
 
         /// Content value of the label
         std::string content;
-
         /// Pango font descriptor for the label's font
         struct _PangoFontDescription *fontDesc{nullptr};
-        /// Pango text layout object
-        struct _PangoLayout *layout{nullptr};
 
         /// Set when the text content changes
         uintptr_t contentDirty          :1{false};

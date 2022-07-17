@@ -11,8 +11,6 @@ using namespace shittygui::widgets;
  * @brief Free all rendering resources belonging to the label.
  */
 Label::~Label() {
-    this->releaseResources();
-
     // release font descriptor
     if(this->fontDesc) {
         pango_font_description_free(this->fontDesc);
@@ -24,11 +22,7 @@ Label::~Label() {
  * @brief Clean up the label's allocated Pango resources
  */
 void Label::releaseResources() {
-    // release text layout context
-    if(this->layout) {
-        g_object_unref(this->layout);
-        this->layout = nullptr;
-    }
+    this->releaseTextResources();
 
     // restore the default dirty flags
     this->contentDirty = true;
@@ -41,26 +35,14 @@ void Label::releaseResources() {
  * @brief Render the label text content
  */
 void Label::draw(cairo_t *drawCtx, const bool everything) {
-    int width, height;
     const auto &bounds = this->getBounds();
 
-    // initialize layout if needed
-    if(!this->layout) {
-        this->layout = pango_cairo_create_layout(drawCtx);
+    if(!this->hasTextResources()) {
+        this->initTextResources(drawCtx);
     }
 
     this->updateLayout();
-
-    // shape text and get its size
-    pango_layout_set_width(this->layout, bounds.size.width * PANGO_SCALE);
-    pango_layout_set_height(this->layout, bounds.size.height * PANGO_SCALE);
-
-    pango_cairo_update_layout(drawCtx, this->layout);
-    pango_layout_get_size(this->layout, &width, &height);
-
-    // render it
-    cairo::SetSource(drawCtx, this->foreground);
-    pango_cairo_show_layout(drawCtx, this->layout);
+    this->drawString(drawCtx, bounds, this->foreground);
 
     Widget::draw(drawCtx, everything);
 }
@@ -85,50 +67,19 @@ void Label::updateLayout() {
 
     // text alignment and justification
     if(this->alignDirty) {
-        switch(this->align) {
-            case TextAlign::Left:
-                pango_layout_set_alignment(this->layout, PANGO_ALIGN_LEFT);
-                break;
-            case TextAlign::Center:
-                pango_layout_set_alignment(this->layout, PANGO_ALIGN_CENTER);
-                break;
-            case TextAlign::Right:
-                pango_layout_set_alignment(this->layout, PANGO_ALIGN_RIGHT);
-                break;
-        }
-
-        pango_layout_set_justify(this->layout, this->justified);
-
+        this->setTextLayoutAlign(this->align, this->justified);
         this->alignDirty = false;
     }
 
     // word wrapping state (either word or char boundaries)
     if(this->wordWrapDirty) {
-        if(this->wordWrap) {
-            pango_layout_set_wrap(this->layout, PANGO_WRAP_WORD);
-        } else {
-            pango_layout_set_wrap(this->layout, PANGO_WRAP_CHAR);
-        }
+        this->setTextLayoutWrapMode(true, this->wordWrap);
         this->wordWrapDirty = false;
     }
 
     // ellipsization mode
     if(this->ellipsizationDirty) {
-        switch(this->ellipsizationMode) {
-            case EllipsizeMode::None:
-                pango_layout_set_ellipsize(this->layout, PANGO_ELLIPSIZE_NONE);
-                break;
-            case EllipsizeMode::Start:
-                pango_layout_set_ellipsize(this->layout, PANGO_ELLIPSIZE_START);
-                break;
-            case EllipsizeMode::Middle:
-                pango_layout_set_ellipsize(this->layout, PANGO_ELLIPSIZE_MIDDLE);
-                break;
-            case EllipsizeMode::End:
-                pango_layout_set_ellipsize(this->layout, PANGO_ELLIPSIZE_END);
-                break;
-        }
-
+        this->setTextLayoutEllipsization(this->ellipsizationMode);
         this->ellipsizationDirty = false;
     }
 }
@@ -149,9 +100,6 @@ void Label::setFont(const std::string_view name, const double size) {
         pango_font_description_free(this->fontDesc);
     }
 
-    this->fontDesc = pango_font_description_from_string(name.data());
-    pango_font_description_set_size(this->fontDesc, size * PANGO_SCALE);
-
+    this->fontDesc = this->getFont(name, size);
     this->fontDirty = true;
 }
-
