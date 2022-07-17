@@ -3,6 +3,7 @@
  *
  * @brief SDL2 output example
  */
+#include <shittygui/Image.h>
 #include <shittygui/Screen.h>
 #include <shittygui/Widgets/Button.h>
 #include <shittygui/Widgets/Container.h>
@@ -73,8 +74,18 @@ Lomo photo booth single-origin coffee health goth raclette YOLO franzen unicorn 
     auto butt = shittygui::MakeWidget<shittygui::widgets::Button>({5, 300}, {150, 38},
             shittygui::widgets::Button::Type::Push);
     butt->setTitle("Push me");
+    butt->setIconGravity(shittygui::widgets::Button::IconGravity::Left);
 
     right->addChild(butt);
+
+    auto plantImg = shittygui::Image::Read("./plant.png");
+    butt->setIcon(plantImg);
+
+    auto butt2 = shittygui::MakeWidget<shittygui::widgets::Button>({5, 270}, {24, 24},
+            shittygui::widgets::Button::Type::Push);
+    butt2->setIcon(plantImg);
+
+    right->addChild(butt2);
 
     cont->addChild(right);
     screen->setRootWidget(cont);

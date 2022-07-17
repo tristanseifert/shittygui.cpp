@@ -6,6 +6,7 @@
 #include <string>
 #include <string_view>
 
+#include <shittygui/Image.h>
 #include <shittygui/Widget.h>
 #include <shittygui/Types.h>
 #include <shittygui/TextRendering.h>
@@ -19,10 +20,21 @@ namespace shittygui::widgets {
  */
 class Button: public Widget, protected TextRendering {
     public:
-        enum class Type {
+        /// Button rendering style
+        enum class Type: uint8_t {
+            /// Rounded push action button
             Push,
+            /// Square push action button
             Square,
+            /// Circular button with a "?" glyph inside
             Help,
+        };
+
+        /// Icon gravity (alignment)
+        enum class IconGravity: uint8_t {
+            Left,
+            Center,
+            Right,
         };
 
         /**
@@ -106,6 +118,35 @@ class Button: public Widget, protected TextRendering {
             this->needsDisplay();
         }
 
+        /**
+         * @brief Set the icon
+         *
+         * The icon is by default displayed centered in the button.
+         */
+        inline void setIcon(const std::shared_ptr<Image> &icon) {
+            this->icon = icon;
+            this->iconDirty = true;
+            this->needsDisplay();
+        }
+
+        /**
+         * @brief Set the icon gravity
+         *
+         * Defines where the icon is displayed in relation to the button. In addition, certain
+         * values can affect the layout of the text in relation to the icon.
+         */
+        inline void setIconGravity(const IconGravity newGrav) {
+            this->ig = newGrav;
+            this->iconGravityDirty = true;
+            this->needsDisplay();
+        }
+        /**
+         * @brief Get the currently set icon gravity
+         */
+        constexpr inline auto getIconGravity() const {
+            return this->ig;
+        }
+
     private:
         void releaseResources();
 
@@ -114,7 +155,8 @@ class Button: public Widget, protected TextRendering {
         void drawPushButton(struct _cairo *drawCtx, const bool everything);
         void drawHelpButton(struct _cairo *drawCtx, const bool everything);
 
-        void drawTitle(struct _cairo *drawCtx, const Rect &rect);
+        void drawTitle(struct _cairo *drawCtx, const Rect &contentRect);
+        void drawIcon(struct _cairo *drawCtx, const Rect &contentRect);
 
     private:
         /// Default button font
@@ -124,6 +166,8 @@ class Button: public Widget, protected TextRendering {
 
         /// Button type
         Type type{Type::Push};
+        /// Icon gravity
+        IconGravity ig{IconGravity::Center};
 
         /// Border color
         Color borderColor{.5, .5, .5};
@@ -144,6 +188,13 @@ class Button: public Widget, protected TextRendering {
         /// Help button content color
         Color helpContentColor{161./255., 69./255., 252./255.};
 
+        /// Icon displayed on the push button
+        std::shared_ptr<Image> icon;
+        /// Padding between icon and edge of content area
+        uint16_t iconPadding{2};
+        /// Rect into which the icon was drawn
+        Rect iconRect;
+
         /// String displayed inside a push button
         std::string title;
         /// Font to render title with
@@ -153,9 +204,15 @@ class Button: public Widget, protected TextRendering {
         uintptr_t titleDirty            :1{false};
         /// Set when the font has been changed
         uintptr_t fontDirty             :1{false};
+        /// Set when the icon changed
+        uintptr_t iconDirty             :1{false};
+        /// Set when the icon gravity changed
+        uintptr_t iconGravityDirty      :1{false};
 
         /// Shall the title be drawn?
         uintptr_t shouldRenderTitle     :1{true};
+        /// Should the icon be drawn?
+        uintptr_t shouldRenderIcon      :1{true};
         /// Is the button active/selected?
         uintptr_t selected              :1{false};
 };
