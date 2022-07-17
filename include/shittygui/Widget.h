@@ -168,6 +168,26 @@ class Widget: public std::enable_shared_from_this<Widget> {
         }
 
         /**
+         * @brief Convert a rectangle to screen space
+         *
+         * @param in Input rectangle, in the coordinate space of this widget
+         */
+        inline Rect convertToScreenSpace(const Rect &in) {
+            auto temp = in;
+
+            // offset this by our frame
+            temp.origin.x += this->frame.origin.x;
+            temp.origin.y += this->frame.origin.y;
+
+            // recurse to the parent implementation of this
+            if(auto parent = this->getParent()) {
+                return parent->convertToScreenSpace(temp);
+            } else {
+                return temp;
+            }
+        }
+
+        /**
          * @brief Notification that our root view is about to change screens
          */
         virtual inline void willMoveToScreen(const std::shared_ptr<Screen> &newScreen) {}
@@ -208,6 +228,17 @@ class Widget: public std::enable_shared_from_this<Widget> {
          *         the behavior is undefined.
          */
         virtual inline bool hasDefaultFocus() {
+            return false;
+        }
+
+        /**
+         * @brief Whether the widget wants to track touch events
+         *
+         * When a widget opts in to tracking of touch events, it will receive all subsequent touch
+         * events after a touch down (until the touch is released) event, even if they exit the
+         * bounds of the widget.
+         */
+        virtual inline bool wantsTouchTracking() {
             return false;
         }
 

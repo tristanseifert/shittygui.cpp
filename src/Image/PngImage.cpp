@@ -38,7 +38,11 @@ PngImage::PngImage(const std::filesystem::path &path) {
         throw std::system_error(errno, std::generic_category(), "fopen image");
     }
 
-    fread(header.data(), 1, header.size(), fp);
+    const auto numRead = fread(header.data(), 1, header.size(), fp);
+    if(numRead != header.size()) {
+        throw std::runtime_error("failed to read image header");
+    }
+
     if(png_sig_cmp(reinterpret_cast<png_bytep>(header.data()), 0, header.size())) {
         fclose(fp);
         throw std::invalid_argument("file is not a png");

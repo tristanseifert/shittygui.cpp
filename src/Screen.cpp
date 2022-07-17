@@ -275,6 +275,19 @@ void Screen::processEvents() {
              * is sent to the first responder, and otherwise it's ignored.
              */
             if constexpr(std::is_same_v<T, event::Touch>) {
+                // set if a touch event should result in setting a new tracking widget
+                bool wantNewTrackingWidget{true};
+
+                // check the touch tracking widget
+                if(auto widget = this->touchTrackingWidget.lock()) {
+                    wantNewTrackingWidget = false;
+
+                    auto handeled = widget->handleTouchEvent(arg);
+                    if(handeled) {
+                        goto beach;
+                    }
+                }
+
                 // identify the widget under this location
                 if(this->rootWidget) {
                     Point targetPoint;
@@ -286,7 +299,11 @@ void Screen::processEvents() {
                     if(target) {
                         const auto handeled = target->handleTouchEvent(arg);
                         if(handeled) {
-                            return;
+                            // if it handled the event, it's going to be the new tracking widget
+                            if(wantNewTrackingWidget && target->wantsTouchTracking()) {
+                                this->touchTrackingWidget = target;
+                            }
+                            goto beach;
                         }
                     }
                 }
@@ -294,6 +311,12 @@ void Screen::processEvents() {
                 // still unhandeled: try first responder
                 if(auto widget = this->firstResponder.lock()) {
                     widget->handleTouchEvent(arg);
+                }
+
+beach:;
+                // common handling
+                if(!arg.isDown) {
+                    this->touchTrackingWidget.reset();
                 }
             }
             /*

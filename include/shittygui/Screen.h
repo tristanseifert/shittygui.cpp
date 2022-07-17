@@ -221,6 +221,14 @@ class Screen: public std::enable_shared_from_this<Screen> {
 
         /// Which widget has the current input focus
         std::weak_ptr<Widget> firstResponder;
+        /**
+         * @brief Touch event widget
+         *
+         * This is the widget that received the initial "touch down" event; it will get first dibs
+         * on all subsequent touch events (before any widgets under the new points) until the
+         * touch is moved up.
+         */
+        std::weak_ptr<Widget> touchTrackingWidget;
 
         /// Set when any widget in this screen becomes dirty
         uintptr_t dirtyFlag                     :1{false};

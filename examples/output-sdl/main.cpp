@@ -14,6 +14,7 @@
 #include <SDL.h>
 
 #include <atomic>
+#include <cmath>
 #include <cstdio>
 #include <iostream>
 #include <memory>
@@ -33,16 +34,19 @@ static void InitScreen(const std::shared_ptr<shittygui::Screen> &screen) {
     cont->setDrawsBorder(false);
     cont->setBorderRadius(0.);
     cont->setBackgroundColor({0, 0.125, 0});
+    cont->setDebugLabel("Root container");
 
     // left container
     auto left = shittygui::MakeWidget<shittygui::widgets::Container>({20, 20}, {360, 430});
     left->setBackgroundColor({0.33, 0, 0});
+    left->setDebugLabel("Left container");
 
     auto leftLabel = shittygui::MakeWidget<shittygui::widgets::Label>({2, 0}, {356, 45},
             "Hello World!");
     leftLabel->setFont("Avenir Next Bold", 24);
     leftLabel->setTextAlign(shittygui::TextAlign::Center);
     leftLabel->setTextColor({1, 1, 1});
+    leftLabel->setDebugLabel("'Hello world' label");
     left->addChild(leftLabel);
 
     auto longLabel = shittygui::MakeWidget<shittygui::widgets::Label>({3, 45}, {354, 240});
@@ -54,6 +58,7 @@ Lomo photo booth single-origin coffee health goth raclette YOLO franzen unicorn 
     longLabel->setWordWrap(true);
     longLabel->setEllipsizeMode(shittygui::EllipsizeMode::Middle);
     longLabel->setTextColor({0.9, 1, 1});
+    longLabel->setDebugLabel("Long text label");
 
     left->addChild(longLabel);
 
@@ -62,19 +67,23 @@ Lomo photo booth single-origin coffee health goth raclette YOLO franzen unicorn 
     // right container
     auto right = shittygui::MakeWidget<shittygui::widgets::Container>({420, 20}, {360, 430});
     right->setBackgroundColor({0, 0, 0.33});
+    right->setDebugLabel("Right container");
 
     auto indetBar = shittygui::MakeWidget<shittygui::widgets::ProgressBar>({5, 400}, {350, 22},
             shittygui::widgets::ProgressBar::Style::Indeterminate);
+    indetBar->setDebugLabel("Indeterminate progress bar");
     right->addChild(indetBar);
 
     auto normalBar = shittygui::MakeWidget<shittygui::widgets::ProgressBar>({5, 368}, {350, 22},
             shittygui::widgets::ProgressBar::Style::Determinate);
     normalBar->setProgress(.5);
+    normalBar->setDebugLabel("Determinate progress bar");
     right->addChild(normalBar);
 
     // buttons
     auto butt = shittygui::MakeWidget<shittygui::widgets::Button>({5, 300}, {150, 38},
             shittygui::widgets::Button::Type::Push);
+    butt->setDebugLabel("'Push me' button");
     butt->setTitle("Push me");
     butt->setIconGravity(shittygui::widgets::Button::IconGravity::Left);
 
@@ -86,6 +95,7 @@ Lomo photo booth single-origin coffee health goth raclette YOLO franzen unicorn 
     auto butt2 = shittygui::MakeWidget<shittygui::widgets::Button>({5, 270}, {24, 24},
             shittygui::widgets::Button::Type::Push);
     butt2->setIcon(plantImg);
+    butt2->setDebugLabel("Plant button");
 
     right->addChild(butt2);
 
@@ -119,6 +129,52 @@ Lomo photo booth single-origin coffee health goth raclette YOLO franzen unicorn 
 
     cont->addChild(right);
     screen->setRootWidget(cont);
+}
+
+/**
+ * @brief Insert a touch event into the screen's event queue
+ *
+ * This takes a mouse button up/down event to insert a touch up/down event if it's the left button,
+ * and for the center mouse button generate a button event.
+ */
+static void InsertTouchEvent(const std::shared_ptr<shittygui::Screen> &screen,
+        const SDL_MouseButtonEvent &event) {
+    // select (middle) button
+    if(event.button == SDL_BUTTON_MIDDLE) {
+        screen->queueEvent(shittygui::event::Button(shittygui::event::Button::Select,
+                    (event.state == SDL_PRESSED)));
+    }
+    // touch event
+    else if(event.button == SDL_BUTTON_LEFT) {
+        screen->queueEvent(shittygui::event::Touch(shittygui::Point(event.x, event.y),
+                    (event.state == SDL_PRESSED)));
+    }
+}
+
+/**
+ * @brief Insert a movement event into the screen's event queue
+ *
+ * Convert a mouse motion event into a touch event. The evnet is discarded if the mouse isn't down.
+ */
+static void InsertTouchEvent(const std::shared_ptr<shittygui::Screen> &screen,
+        const SDL_MouseMotionEvent &event) {
+    // ignore event if no button down or if it's not the left button
+    if(!event.state || event.state != SDL_BUTTON_LMASK) {
+        return;
+    }
+
+    screen->queueEvent(shittygui::event::Touch(shittygui::Point(event.x, event.y),
+                (event.state & SDL_BUTTON_LMASK)));
+}
+
+/**
+ * @brief Insert a scroll event (based on a mouse wheel event)
+ *
+ * Convert mouse wheel events into scroll events.
+ */
+static void InsertScrollEvent(const std::shared_ptr<shittygui::Screen> &screen,
+        const SDL_MouseWheelEvent &event) {
+    screen->queueEvent(shittygui::event::Scroll(std::ceil(event.preciseY)));
 }
 
 /**
@@ -195,6 +251,9 @@ int main(const int argc, const char **argv) {
      * In a real application, you would want to synchronize drawing with the underlying display
      * and coalesce all event updates within a single frame into a single draw call. Not doing this
      * here simplifies the code considerably, but may lead to various graphical artifacts.
+     *
+     * We simulate a rotary encoder with the mouse wheel; rotate it vertically to scroll, and click
+     * it to simulate the encoder "select" button.
      */
     while(gRun) {
         // process events
@@ -202,8 +261,20 @@ int main(const int argc, const char **argv) {
 
         while(SDL_PollEvent(&e)) {
             switch(e.type) {
-                // TODO: mouse movement
-                // TODO: mouse buttons
+                // mouse motion
+                case SDL_MOUSEMOTION:
+                    InsertTouchEvent(screen, e.motion);
+                    break;
+                // mouse button events
+                case SDL_MOUSEBUTTONDOWN:
+                case SDL_MOUSEBUTTONUP:
+                    InsertTouchEvent(screen, e.button);
+                    break;
+                // mouse wheel = encoder events
+                case SDL_MOUSEWHEEL:
+                    InsertScrollEvent(screen, e.wheel);
+                    break;
+
                 // TODO: key events
 
                 // terminate the application
@@ -213,7 +284,8 @@ int main(const int argc, const char **argv) {
             }
         }
 
-        // frame drawing callback
+        // update the state of the screen
+        screen->processEvents();
         screen->handleAnimations();
 
         // redraw the screen, if it indicates that it's dirty. this is slow and shitty (lol)
