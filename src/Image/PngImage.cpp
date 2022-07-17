@@ -93,7 +93,7 @@ void PngImage::doPngRead(FILE *fp, const size_t sigBytesRead) {
         throw std::invalid_argument("unsupported channel depth (only 8 bpc currently supported)");
     }
 
-    const auto numPasses = png_set_interlace_handling(pngPtr);
+    png_set_interlace_handling(pngPtr);
     png_read_update_info(pngPtr, infoPtr);
 
     // allocate a framebuffer

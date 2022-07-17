@@ -269,3 +269,42 @@ void Widget::didMoveToParent() {
         }
     }
 }
+
+
+
+/**
+ * @brief Search for a child containing the given point
+ *
+ * This will descend the child hierarchy to find the most specific (that is, deepest into the
+ * hierarchy) widget whose frame rectangle contains this point.
+ *
+ * @param at Point to find the widget under
+ * @param outRelativePoint Input point relative to the origin of the returned widget
+ *
+ * @return Widget containing the point, or `nullptr` if none
+ *
+ * @remark This can be slow if there are a lot of widgets.
+ */
+std::shared_ptr<Widget> Widget::findChildAt(const Point at, Point &outRelativePoint) {
+    // bail if we don't contain this point
+    if(!this->bounds.contains(at)) {
+        return nullptr;
+    }
+
+    // check all children
+    for(const auto &child : this->children) {
+        // translate the point to the child's origin
+        const auto &childFrame = child->getFrame();
+        const auto translated = Point(at.x - childFrame.origin.x, at.y - childFrame.origin.y);
+
+        // check this child
+        auto ptr = child->findChildAt(translated, outRelativePoint);
+        if(ptr) {
+            return ptr;
+        }
+    }
+
+    // failed to find any more specific children
+    outRelativePoint = at;
+    return this->shared_from_this();
+}

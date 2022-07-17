@@ -107,6 +107,19 @@ struct Rect {
         return this->inset(d, d);
     }
 
+    /**
+     * @brief Test if the given point lies inside the rectangle
+     *
+     * @param p Point to test
+     *
+     * @return Whether the point lies inside the rect
+     */
+    constexpr inline bool contains(const Point p) const {
+        const auto x2 = this->origin.x + this->size.width,
+              y2 = this->origin.y + this->size.height;
+        return p.x >= this->origin.x && p.x <= x2 && p.y >= this->origin.y && p.y <= y2;
+    }
+
     Point origin;
     Size size;
 };

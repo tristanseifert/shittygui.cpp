@@ -1,11 +1,15 @@
+#include <numeric>
 #include <stdexcept>
+#include <type_traits>
 
 #include <cairo.h>
 
 #include "Animator.h"
 #include "CairoHelpers.h"
 #include "Errors.h"
+#include "Event.h"
 #include "Screen.h"
+#include "Util.h"
 #include "Widget.h"
 
 using namespace shittygui;
@@ -243,4 +247,92 @@ void Screen::setRootWidget(const std::shared_ptr<Widget> &newRoot) {
     newRoot->setScreen(this->shared_from_this());
     this->rootWidget = newRoot;
     this->needsDisplay();
+}
+
+
+
+/**
+ * @brief Process all pending events
+ *
+ * First, all "sum" events such as scrolling will be accumulated; then the appropriate handlers
+ * for touch down/move/up and physical buttons will be invoked as well, in the order that the
+ * events are received.
+ */
+void Screen::processEvents() {
+    std::lock_guard lg(this->eventQueueLock);
+
+    while(!this->eventQueue.empty()) {
+        const auto &event = this->eventQueue.front();
+
+        std::visit([&](auto&& arg) -> void {
+            using T = std::decay_t<decltype(arg)>;
+
+            /*
+             * Handle touch event
+             *
+             * Figure out what widget is on screen at the given coordinate, then provide the event
+             * to it for handling. If it doesn't handle it (or there is no widget there) the event
+             * is sent to the first responder, and otherwise it's ignored.
+             */
+            if constexpr(std::is_same_v<T, event::Touch>) {
+                // identify the widget under this location
+                if(this->rootWidget) {
+                    Point targetPoint;
+                    auto target = this->rootWidget->findChildAt(arg.position, targetPoint);
+                    printf("target for touch (%d, %d) = %p ('%s') (%d, %d)\n", arg.position.x, arg.position.y,
+                            target.get(), target->getDebugLabel().data(), targetPoint.x, targetPoint.y);
+
+                    // try that widget
+                    if(target) {
+                        const auto handeled = target->handleTouchEvent(arg);
+                        if(handeled) {
+                            return;
+                        }
+                    }
+                }
+
+                // still unhandeled: try first responder
+                if(auto widget = this->firstResponder.lock()) {
+                    widget->handleTouchEvent(arg);
+                }
+            }
+            /*
+             * Handle button event
+             *
+             * We'll give the current first responder widget a chance to handle the event; if it
+             * doesn't handle it, we process our internal actions.
+             */
+            else if constexpr(std::is_same_v<T, event::Button>) {
+                if(auto widget = this->firstResponder.lock()) {
+                    const auto handled = widget->handleButtonEvent(arg);
+                    if(handled) {
+                        return;
+                    }
+                }
+
+                // do our stuff
+                switch(arg.type) {
+                    default:
+                        fprintf(stderr, "%s: unhandled, unknown button type $%02x (%s)\n",
+                                "shittygui", arg.type, arg.isDown ? "down" : "up");
+                }
+            }
+            /*
+             * Handle scroll event
+             *
+             * This discards the return value since we don't care if the first responder didn't
+             * handle the event; if it did not, there's nowhere else for it to go.
+             *
+             * (That is, until event bubbling is implemented…)
+             */
+            else if constexpr(std::is_same_v<T, event::Scroll>) {
+                if(auto widget = this->firstResponder.lock()) {
+                    widget->handleScrollEvent(arg);
+                }
+            }
+        }, event);
+
+        // go to next
+        this->eventQueue.pop_front();
+    }
 }

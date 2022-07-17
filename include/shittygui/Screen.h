@@ -3,9 +3,12 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <deque>
 #include <memory>
+#include <mutex>
 #include <span>
 
+#include <shittygui/Event.h>
 #include <shittygui/Types.h>
 
 namespace shittygui {
@@ -152,6 +155,36 @@ class Screen: public std::enable_shared_from_this<Screen> {
             this->needsDisplay();
         }
 
+    public:
+        void processEvents();
+
+        /**
+         * @brief Insert an event into the event queue
+         *
+         * @param eevnt Event to insert into the event queue
+         * @param atEnd Whether the event is to go at the end or front of the event queue
+         */
+        inline void queueEvent(const Event event, const bool atEnd = true) {
+            std::lock_guard lg(this->eventQueueLock);
+
+            if(atEnd) {
+                this->eventQueue.emplace_back(event);
+            } else {
+                this->eventQueue.emplace_front(event);
+            }
+        }
+
+        /**
+         * @brief Set a widget as the first responder
+         *
+         * First responder widgets will receive all modal (that is, keyboard and scroll events)
+         * user input.
+         */
+        inline void setFirstResponder(const std::shared_ptr<Widget> &widget) {
+            this->firstResponder = widget;
+            this->firstResponderDirty = true;
+        }
+
     private:
         void commonInit();
 
@@ -181,12 +214,22 @@ class Screen: public std::enable_shared_from_this<Screen> {
         /// Animation coordinator instance
         std::shared_ptr<Animator> anim;
 
+        /// Event queue
+        std::deque<Event> eventQueue;
+        /// Lock protecting the event queue
+        std::mutex eventQueueLock;
+
+        /// Which widget has the current input focus
+        std::weak_ptr<Widget> firstResponder;
+
         /// Set when any widget in this screen becomes dirty
         uintptr_t dirtyFlag                     :1{false};
         /// Set to force rendering of _all_ widgets regardless of dirty status
         uintptr_t forceDisplayFlag              :1{false};
         /// Whether the screen applies UI scaling
         uintptr_t scaled                        :1{false};
+        /// The first responder widget has changed
+        uintptr_t firstResponderDirty           :1{false};
 };
 }
 
