@@ -47,11 +47,23 @@ void Button::drawPushButton(cairo_t *drawCtx, const bool everything) {
     cairo_stroke(drawCtx);
 
     // draw text
+    if(this->shouldRenderTitle && !this->title.empty()) {
+        this->drawTitle(drawCtx, fillingBounds);
+    }
+}
+
+/**
+ * @brief Draw the button title
+ *
+ * @param drawCtx Drawing context to render on
+ * @param rect Rectangle to draw the text in
+ */
+void Button::drawTitle(cairo_t *drawCtx, const Rect &rect) {
     if(!this->hasTextResources()) {
         this->initTextResources(drawCtx);
 
         this->setTextLayoutAlign(TextAlign::Center, false);
-        this->setTextLayoutWrapMode(false, false);
+        this->setTextLayoutWrapMode(false, true);
         this->setTextLayoutEllipsization(EllipsizeMode::Middle);
 
         if(!this->fontDesc) {
@@ -62,9 +74,9 @@ void Button::drawPushButton(cairo_t *drawCtx, const bool everything) {
     this->updateTextLayout();
 
     if(this->selected) {
-        this->drawString(drawCtx, fillingBounds, this->selectedTextColor);
+        this->drawString(drawCtx, rect, this->selectedTextColor);
     } else {
-        this->drawString(drawCtx, fillingBounds, this->textColor, VerticalAlign::Middle);
+        this->drawString(drawCtx, rect, this->textColor, VerticalAlign::Middle);
     }
 }
 

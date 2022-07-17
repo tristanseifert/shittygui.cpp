@@ -54,6 +54,7 @@ class Button: public Widget, protected TextRendering {
             switch(this->type) {
                 case Type::Push:
                     this->drawPushButton(drawCtx, everything);
+                    break;
 
                 default:
                     break;
@@ -91,6 +92,20 @@ class Button: public Widget, protected TextRendering {
 
         void setFont(const std::string_view name, const double size);
 
+        /**
+         * @brief Set the text color
+         *
+         * The text color is used to render the title in the button.
+         *
+         * @param normal Text color for the normal state
+         * @param selected Text color for the selected state
+         */
+        inline void setTextColor(const Color &normal, const Color &selected) {
+            this->textColor = normal;
+            this->selectedTextColor = selected;
+            this->needsDisplay();
+        }
+
     private:
         void releaseResources();
 
@@ -98,6 +113,8 @@ class Button: public Widget, protected TextRendering {
 
         void drawPushButton(struct _cairo *drawCtx, const bool everything);
         void drawHelpButton(struct _cairo *drawCtx, const bool everything);
+
+        void drawTitle(struct _cairo *drawCtx, const Rect &rect);
 
     private:
         /// Default button font
@@ -137,6 +154,8 @@ class Button: public Widget, protected TextRendering {
         /// Set when the font has been changed
         uintptr_t fontDirty             :1{false};
 
+        /// Shall the title be drawn?
+        uintptr_t shouldRenderTitle     :1{true};
         /// Is the button active/selected?
         uintptr_t selected              :1{false};
 };
