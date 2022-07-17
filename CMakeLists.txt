@@ -95,6 +95,7 @@ add_library(shittygui STATIC
     src/Widgets/Base.cpp
     src/Widgets/Container.cpp
     src/Widgets/Label.cpp
+    src/Widgets/ProgressBar.cpp
 )
 target_include_directories(shittygui PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 target_include_directories(shittygui PRIVATE ${CMAKE_CURRENT_LIST_DIR}/include/shittygui)
