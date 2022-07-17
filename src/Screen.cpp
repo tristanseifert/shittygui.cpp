@@ -170,10 +170,24 @@ bool Screen::isDirty() const {
 void Screen::redraw() {
     cairo_save(this->drawCtx);
 
-    // apply UI scale
+    // apply UI scale and rotation
     if(this->scaled) {
         const double factor{this->scaleFactor};
         cairo_scale(this->drawCtx, factor, factor);
+    }
+
+    switch(this->rotation) {
+        case Rotation::Rotate270:
+            cairo_rotate(this->drawCtx, cairo::DegreesToRadian(270));
+            cairo_translate(this->drawCtx, -this->size.width, 0);
+            break;
+
+        // nothing to be done
+        case Rotation::None:
+            break;
+
+        default:
+            throw std::runtime_error("unimplemented screen rotation");
     }
 
     // draw background if no root widget, or it's not opaque
