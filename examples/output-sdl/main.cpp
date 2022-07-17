@@ -4,6 +4,7 @@
  * @brief SDL2 output example
  */
 #include <shittygui/Screen.h>
+#include <shittygui/Widgets/Button.h>
 #include <shittygui/Widgets/Container.h>
 #include <shittygui/Widgets/Label.h>
 #include <shittygui/Widgets/ProgressBar.h>
@@ -68,6 +69,12 @@ Lomo photo booth single-origin coffee health goth raclette YOLO franzen unicorn 
             shittygui::widgets::ProgressBar::Style::Determinate);
     normalBar->setProgress(.5);
     right->addChild(normalBar);
+
+    auto butt = shittygui::MakeWidget<shittygui::widgets::Button>({5, 300}, {150, 38},
+            shittygui::widgets::Button::Type::Push);
+    butt->setTitle("Push me");
+
+    right->addChild(butt);
 
     cont->addChild(right);
     screen->setRootWidget(cont);

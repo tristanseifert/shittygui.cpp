@@ -66,9 +66,9 @@ PangoFontDescription *TextRendering::getFont(const std::string_view name, const 
  * @remark The render context should have its "current point" set as the origin of the text.
  */
 void TextRendering::drawString(cairo_t *drawCtx, const Rect &bounds, const Color &color,
-        const std::string_view &str) {
+        const std::string_view &str, const VerticalAlign valign) {
     pango_layout_set_text(this->layout, str.data(), str.length());
-    this->drawString(drawCtx, bounds, color);
+    this->drawString(drawCtx, bounds, color, valign);
 }
 
 /**
@@ -80,12 +80,41 @@ void TextRendering::drawString(cairo_t *drawCtx, const Rect &bounds, const Color
  *
  * @remark The render context should have its "current point" set as the origin of the text.
  */
-void TextRendering::drawString(cairo_t *drawCtx, const Rect &bounds, const Color &color) {
+void TextRendering::drawString(cairo_t *drawCtx, const Rect &bounds, const Color &color,
+        const VerticalAlign valign) {
+    int width, height;
+    double pX, pY;
+
+    cairo_move_to(drawCtx, bounds.origin.x, bounds.origin.y);
+
+    // lay out the text and get its size
     pango_layout_set_width(this->layout, bounds.size.width * PANGO_SCALE);
     pango_layout_set_height(this->layout, bounds.size.height * PANGO_SCALE);
 
     pango_cairo_update_layout(drawCtx, this->layout);
 
+    pango_layout_get_size(this->layout, &width, &height);
+
+    // perform vertical align offsetting
+    cairo_get_current_point(drawCtx, &pX, &pY);
+
+    switch(valign) {
+        case VerticalAlign::Middle:
+            cairo_move_to(drawCtx, pX, pY);
+            pY += (bounds.size.height - (height / PANGO_SCALE)) / 2;
+            cairo_move_to(drawCtx, pX, pY);
+            break;
+
+        case VerticalAlign::Bottom:
+            pY += bounds.size.height - (height / PANGO_SCALE);
+            cairo_move_to(drawCtx, pX, pY);
+            break;
+
+        default:
+            break;
+    }
+
+    // render it
     cairo::SetSource(drawCtx, color);
     pango_cairo_show_layout(drawCtx, this->layout);
 }

@@ -16,6 +16,13 @@ class TextRendering {
         ~TextRendering();
 
     protected:
+        /// Vertical text alignment
+        enum class VerticalAlign {
+            Top,
+            Middle,
+            Bottom
+        };
+
         /// Check whether we have text resources instantiated
         constexpr inline bool hasTextResources() const {
             return (this->layout != nullptr);
@@ -25,8 +32,9 @@ class TextRendering {
 
         struct _PangoFontDescription *getFont(const std::string_view name, const double size) const;
         void drawString(struct _cairo *drawCtx, const Rect &bounds, const Color &color,
-                const std::string_view &str);
-        void drawString(struct _cairo *drawCtx, const Rect &bounds, const Color &color);
+                const std::string_view &str, const VerticalAlign valign = VerticalAlign::Top);
+        void drawString(struct _cairo *drawCtx, const Rect &bounds, const Color &color,
+                const VerticalAlign valign = VerticalAlign::Top);
 
         void setTextLayoutAlign(const TextAlign newAlign, const bool justified);
         void setTextLayoutEllipsization(const EllipsizeMode newMode);

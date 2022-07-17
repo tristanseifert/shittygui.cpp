@@ -94,6 +94,7 @@ add_library(shittygui STATIC
     src/Screen.cpp
     src/TextRendering.cpp
     src/Widgets/Base.cpp
+    src/Widgets/Button.cpp
     src/Widgets/Container.cpp
     src/Widgets/Label.cpp
     src/Widgets/ProgressBar.cpp
