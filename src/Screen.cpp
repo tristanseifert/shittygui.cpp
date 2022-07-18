@@ -11,6 +11,7 @@
 #include "Screen.h"
 #include "Util.h"
 #include "Widget.h"
+#include "ViewController.h"
 
 using namespace shittygui;
 
@@ -247,6 +248,28 @@ void Screen::setRootWidget(const std::shared_ptr<Widget> &newRoot) {
     newRoot->setScreen(this->shared_from_this());
     this->rootWidget = newRoot;
     this->needsDisplay();
+}
+
+/**
+ * @brief Set the root view controller
+ *
+ * Update the view controller that's rendered on the screen.
+ *
+ * @param newRoot New root view controller
+ */
+void Screen::setRootViewController(const std::shared_ptr<ViewController> &newRoot) {
+    if(this->rootVc) {
+        auto oldRoot = this->rootVc;
+        oldRoot->viewWillDisappear(false);
+        this->rootVc.reset();
+        oldRoot->viewDidDisappear();
+    }
+
+    newRoot->viewWillAppear(false);
+    this->rootVc = newRoot;
+
+    this->setRootWidget(this->rootVc->getWidget());
+    this->rootVc->viewDidAppear();
 }
 
 

@@ -5,6 +5,7 @@
  */
 #include <shittygui/Image.h>
 #include <shittygui/Screen.h>
+#include <shittygui/ViewController.h>
 #include <shittygui/Widgets/Button.h>
 #include <shittygui/Widgets/Container.h>
 #include <shittygui/Widgets/ImageView.h>
@@ -25,114 +26,155 @@ constexpr static const shittygui::Size kWindowSize{800, 480};
 /// Flag set for as long as we should keep running the UI task
 std::atomic_bool gRun{true};
 
+class TestViewController: public shittygui::ViewController {
+    public:
+        /**
+         * @brief Initialize the view controller
+         */
+        TestViewController() {
+            // create outer container
+            auto cont = shittygui::MakeWidget<shittygui::widgets::Container>({0, 0}, {800, 480});
+            cont->setDrawsBorder(false);
+            cont->setBorderRadius(0.);
+            cont->setBackgroundColor({0, 0.125, 0});
+            cont->setDebugLabel("Root container");
+
+            // left container
+            auto left = shittygui::MakeWidget<shittygui::widgets::Container>({20, 20}, {360, 430});
+            left->setBackgroundColor({0.33, 0, 0});
+            left->setDebugLabel("Left container");
+
+            auto leftLabel = shittygui::MakeWidget<shittygui::widgets::Label>({2, 0}, {356, 45},
+                    "Hello World!");
+            leftLabel->setFont("Avenir Next Bold", 24);
+            leftLabel->setTextAlign(shittygui::TextAlign::Center);
+            leftLabel->setTextColor({1, 1, 1});
+            leftLabel->setDebugLabel("'Hello world' label");
+            left->addChild(leftLabel);
+
+            auto longLabel = shittygui::MakeWidget<shittygui::widgets::Label>({3, 45}, {354, 240});
+            longLabel->setContent(R"(I'm baby retro single-origin coffee stumptown small batch echo park, chicharrones tote bag vexillologist literally. Mlkshk intelligentsia shabby chic sustainable. Shabby chic copper mug helvetica DIY art party you probably haven't heard of them, humblebrag cloud bread adaptogen blog. Dreamcatcher wayfarers raw denim XOXO lyft disrupt jianbing tattooed 90's chia. Gluten-free post-ironic bushwick single-origin coffee brooklyn yes plz. Umami humblebrag shabby chic, selvage pok pok franzen church-key.
+
+        Lomo photo booth single-origin coffee health goth raclette YOLO franzen unicorn vexillologist migas woke wolf irony. Retro ugh palo santo cray aesthetic fashion axe, pabst hashtag poutine. Meggings tbh schlitz, mixtape celiac viral la croix hammock offal squid brooklyn yr fam. Vice chambray kogi fashion axe selfies schlitz trust fund yes plz. Keytar lo-fi affogato pop-up slow-carb schlitz drinking vinegar cray pinterest. Fashion axe vice messenger bag scenester cold-pressed XOXO schlitz YOLO kombucha you probably haven't heard of them. Direct trade small batch pickled, enamel pin yes plz lumbersexual chartreuse forage iceland messenger bag prism.)");
+            longLabel->setFont("Liberation Sans", 11);
+            longLabel->setTextAlign(shittygui::TextAlign::Left);
+            longLabel->setWordWrap(true);
+            longLabel->setEllipsizeMode(shittygui::EllipsizeMode::Middle);
+            longLabel->setTextColor({0.9, 1, 1});
+            longLabel->setDebugLabel("Long text label");
+
+            left->addChild(longLabel);
+
+            cont->addChild(left);
+
+            // right container
+            auto right = shittygui::MakeWidget<shittygui::widgets::Container>({420, 20}, {360, 430});
+            right->setBackgroundColor({0, 0, 0.33});
+            right->setDebugLabel("Right container");
+
+            auto indetBar = shittygui::MakeWidget<shittygui::widgets::ProgressBar>({5, 400}, {350, 22},
+                    shittygui::widgets::ProgressBar::Style::Indeterminate);
+            indetBar->setDebugLabel("Indeterminate progress bar");
+            right->addChild(indetBar);
+
+            auto normalBar = shittygui::MakeWidget<shittygui::widgets::ProgressBar>({5, 368}, {350, 22},
+                    shittygui::widgets::ProgressBar::Style::Determinate);
+            normalBar->setProgress(.5);
+            normalBar->setDebugLabel("Determinate progress bar");
+            right->addChild(normalBar);
+
+            // buttons
+            auto butt = shittygui::MakeWidget<shittygui::widgets::Button>({5, 300}, {150, 38},
+                    shittygui::widgets::Button::Type::Push);
+            butt->setDebugLabel("'Push me' button");
+            butt->setTitle("Push me");
+            butt->setIconGravity(shittygui::widgets::Button::IconGravity::Left);
+            butt->setPushCallback([](auto whomst) {
+                auto btn = std::dynamic_pointer_cast<shittygui::widgets::Button>(whomst);
+                btn->setTitle("fuk off");
+            });
+
+            right->addChild(butt);
+
+            auto blah = shittygui::MakeWidget<shittygui::widgets::Button>({300, 300}, {150, 38},
+                    shittygui::widgets::Button::Type::Push);
+            blah->setDebugLabel("'Push me' button");
+            blah->setTitle("Long label button");
+            right->addChild(blah);
+
+            auto plantImg = shittygui::Image::Read("./plant.png");
+            butt->setIcon(plantImg);
+
+            auto butt2 = shittygui::MakeWidget<shittygui::widgets::Button>({5, 270}, {24, 24},
+                    shittygui::widgets::Button::Type::Push);
+            butt2->setIcon(plantImg);
+            butt2->setDebugLabel("Plant button");
+
+            right->addChild(butt2);
+
+            // image views
+            auto pyramid = shittygui::Image::Read("./egyptian_pyramid.png");
+            auto spectrum = shittygui::Image::Read("./spectrum.png");
+            auto tree = shittygui::Image::Read("./tree.png");
+
+            right->addChild(shittygui::MakeWidget<shittygui::widgets::ImageView>({5, 200}, {48, 48},
+                    pyramid, shittygui::widgets::ImageView::Mode::None));
+            right->addChild(shittygui::MakeWidget<shittygui::widgets::ImageView>({58, 200}, {16, 16},
+                    pyramid, shittygui::widgets::ImageView::Mode::None));
+            right->addChild(shittygui::MakeWidget<shittygui::widgets::ImageView>({58, 224}, {16, 16},
+                    pyramid, shittygui::widgets::ImageView::Mode::ScaleProportionalDown));
+            right->addChild(shittygui::MakeWidget<shittygui::widgets::ImageView>({79, 200}, {48, 64},
+                    pyramid, shittygui::widgets::ImageView::Mode::ScaleIndependently));
+            right->addChild(shittygui::MakeWidget<shittygui::widgets::ImageView>({132, 200}, {48, 64},
+                    pyramid, shittygui::widgets::ImageView::Mode::ScaleProportionalUpDown));
+
+            auto borderlessImg = shittygui::MakeWidget<shittygui::widgets::ImageView>({185, 200}, {32, 32},
+                    spectrum, shittygui::widgets::ImageView::Mode::None);
+            borderlessImg->setBorderWidth(0);
+            borderlessImg->setBackgroundColor({0, 0, 0, 0});
+            right->addChild(borderlessImg);
+
+            auto borderlessImg2 = shittygui::MakeWidget<shittygui::widgets::ImageView>({185, 232}, {32, 32},
+                    tree, shittygui::widgets::ImageView::Mode::None);
+            borderlessImg2->setBorderWidth(0);
+            borderlessImg2->setBackgroundColor({0, 0, 0, 0});
+            right->addChild(borderlessImg2);
+
+            cont->addChild(right);
+
+            // store it as the root
+            this->view = std::move(cont);
+        }
+
+        /// Get our root view
+        std::shared_ptr<shittygui::Widget> &getWidget() override {
+            return this->view;
+        }
+
+        /// Return a dummy title
+        std::string_view getTitle() override {
+            return "Test View Controller";
+        }
+
+        void viewDidAppear() override {
+            ViewController::viewDidAppear();
+            printf("View controller %p did appear\n", this);
+        }
+        void viewDidDisappear() override {
+            ViewController::viewDidDisappear();
+            printf("View controller %p did disappear\n", this);
+        }
+
+    private:
+        std::shared_ptr<shittygui::Widget> view;
+};
+
 /**
  * @brief Set up the demo screen
  */
 static void InitScreen(const std::shared_ptr<shittygui::Screen> &screen) {
-    // create outer container
-    auto cont = shittygui::MakeWidget<shittygui::widgets::Container>({0, 0}, {800, 480});
-    cont->setDrawsBorder(false);
-    cont->setBorderRadius(0.);
-    cont->setBackgroundColor({0, 0.125, 0});
-    cont->setDebugLabel("Root container");
-
-    // left container
-    auto left = shittygui::MakeWidget<shittygui::widgets::Container>({20, 20}, {360, 430});
-    left->setBackgroundColor({0.33, 0, 0});
-    left->setDebugLabel("Left container");
-
-    auto leftLabel = shittygui::MakeWidget<shittygui::widgets::Label>({2, 0}, {356, 45},
-            "Hello World!");
-    leftLabel->setFont("Avenir Next Bold", 24);
-    leftLabel->setTextAlign(shittygui::TextAlign::Center);
-    leftLabel->setTextColor({1, 1, 1});
-    leftLabel->setDebugLabel("'Hello world' label");
-    left->addChild(leftLabel);
-
-    auto longLabel = shittygui::MakeWidget<shittygui::widgets::Label>({3, 45}, {354, 240});
-    longLabel->setContent(R"(I'm baby retro single-origin coffee stumptown small batch echo park, chicharrones tote bag vexillologist literally. Mlkshk intelligentsia shabby chic sustainable. Shabby chic copper mug helvetica DIY art party you probably haven't heard of them, humblebrag cloud bread adaptogen blog. Dreamcatcher wayfarers raw denim XOXO lyft disrupt jianbing tattooed 90's chia. Gluten-free post-ironic bushwick single-origin coffee brooklyn yes plz. Umami humblebrag shabby chic, selvage pok pok franzen church-key.
-
-Lomo photo booth single-origin coffee health goth raclette YOLO franzen unicorn vexillologist migas woke wolf irony. Retro ugh palo santo cray aesthetic fashion axe, pabst hashtag poutine. Meggings tbh schlitz, mixtape celiac viral la croix hammock offal squid brooklyn yr fam. Vice chambray kogi fashion axe selfies schlitz trust fund yes plz. Keytar lo-fi affogato pop-up slow-carb schlitz drinking vinegar cray pinterest. Fashion axe vice messenger bag scenester cold-pressed XOXO schlitz YOLO kombucha you probably haven't heard of them. Direct trade small batch pickled, enamel pin yes plz lumbersexual chartreuse forage iceland messenger bag prism.)");
-    longLabel->setFont("Liberation Sans", 11);
-    longLabel->setTextAlign(shittygui::TextAlign::Left);
-    longLabel->setWordWrap(true);
-    longLabel->setEllipsizeMode(shittygui::EllipsizeMode::Middle);
-    longLabel->setTextColor({0.9, 1, 1});
-    longLabel->setDebugLabel("Long text label");
-
-    left->addChild(longLabel);
-
-    cont->addChild(left);
-
-    // right container
-    auto right = shittygui::MakeWidget<shittygui::widgets::Container>({420, 20}, {360, 430});
-    right->setBackgroundColor({0, 0, 0.33});
-    right->setDebugLabel("Right container");
-
-    auto indetBar = shittygui::MakeWidget<shittygui::widgets::ProgressBar>({5, 400}, {350, 22},
-            shittygui::widgets::ProgressBar::Style::Indeterminate);
-    indetBar->setDebugLabel("Indeterminate progress bar");
-    right->addChild(indetBar);
-
-    auto normalBar = shittygui::MakeWidget<shittygui::widgets::ProgressBar>({5, 368}, {350, 22},
-            shittygui::widgets::ProgressBar::Style::Determinate);
-    normalBar->setProgress(.5);
-    normalBar->setDebugLabel("Determinate progress bar");
-    right->addChild(normalBar);
-
-    // buttons
-    auto butt = shittygui::MakeWidget<shittygui::widgets::Button>({5, 300}, {150, 38},
-            shittygui::widgets::Button::Type::Push);
-    butt->setDebugLabel("'Push me' button");
-    butt->setTitle("Push me");
-    butt->setIconGravity(shittygui::widgets::Button::IconGravity::Left);
-    butt->setPushCallback([](auto whomst) {
-        auto btn = std::dynamic_pointer_cast<shittygui::widgets::Button>(whomst);
-        btn->setTitle("fuk off");
-    });
-
-    right->addChild(butt);
-
-    auto plantImg = shittygui::Image::Read("./plant.png");
-    butt->setIcon(plantImg);
-
-    auto butt2 = shittygui::MakeWidget<shittygui::widgets::Button>({5, 270}, {24, 24},
-            shittygui::widgets::Button::Type::Push);
-    butt2->setIcon(plantImg);
-    butt2->setDebugLabel("Plant button");
-
-    right->addChild(butt2);
-
-    // image views
-    auto pyramid = shittygui::Image::Read("./egyptian_pyramid.png");
-    auto spectrum = shittygui::Image::Read("./spectrum.png");
-    auto tree = shittygui::Image::Read("./tree.png");
-
-    right->addChild(shittygui::MakeWidget<shittygui::widgets::ImageView>({5, 200}, {48, 48},
-            pyramid, shittygui::widgets::ImageView::Mode::None));
-    right->addChild(shittygui::MakeWidget<shittygui::widgets::ImageView>({58, 200}, {16, 16},
-            pyramid, shittygui::widgets::ImageView::Mode::None));
-    right->addChild(shittygui::MakeWidget<shittygui::widgets::ImageView>({58, 224}, {16, 16},
-            pyramid, shittygui::widgets::ImageView::Mode::ScaleProportionalDown));
-    right->addChild(shittygui::MakeWidget<shittygui::widgets::ImageView>({79, 200}, {48, 64},
-            pyramid, shittygui::widgets::ImageView::Mode::ScaleIndependently));
-    right->addChild(shittygui::MakeWidget<shittygui::widgets::ImageView>({132, 200}, {48, 64},
-            pyramid, shittygui::widgets::ImageView::Mode::ScaleProportionalUpDown));
-
-    auto borderlessImg = shittygui::MakeWidget<shittygui::widgets::ImageView>({185, 200}, {32, 32},
-            spectrum, shittygui::widgets::ImageView::Mode::None);
-    borderlessImg->setBorderWidth(0);
-    borderlessImg->setBackgroundColor({0, 0, 0, 0});
-    right->addChild(borderlessImg);
-
-    auto borderlessImg2 = shittygui::MakeWidget<shittygui::widgets::ImageView>({185, 232}, {32, 32},
-            tree, shittygui::widgets::ImageView::Mode::None);
-    borderlessImg2->setBorderWidth(0);
-    borderlessImg2->setBackgroundColor({0, 0, 0, 0});
-    right->addChild(borderlessImg2);
-
-    cont->addChild(right);
-    screen->setRootWidget(cont);
+    auto vc = std::make_shared<TestViewController>();
+    screen->setRootViewController(vc);
 }
 
 /**

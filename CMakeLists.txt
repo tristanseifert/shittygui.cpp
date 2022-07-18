@@ -93,6 +93,7 @@ add_library(shittygui STATIC
     src/Animator.cpp
     src/Screen.cpp
     src/TextRendering.cpp
+    src/ViewController.cpp
     src/Image/Base.cpp
     src/Image/PngImage.cpp
     src/Widgets/Base.cpp

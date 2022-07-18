@@ -14,6 +14,7 @@
 namespace shittygui {
 class Animator;
 class Widget;
+class ViewController;
 
 /**
  * @brief GUI screen class
@@ -122,14 +123,14 @@ class Screen: public std::enable_shared_from_this<Screen> {
             this->dirtyFlag = true;
         }
 
-        void setRootWidget(const std::shared_ptr<Widget> &newRoot);
+        void setRootViewController(const std::shared_ptr<ViewController> &newRoot);
         /**
-         * @brief Get the current root widget
+         * @brief Get the current root view controller
          *
-         * @return Current root widget (if any has been set)
+         * @return Current root view controller (if any)
          */
-        inline auto getRootWidget() {
-            return this->rootWidget;
+        inline auto getRootViewController() {
+            return this->rootVc;
         }
 
         /**
@@ -188,6 +189,8 @@ class Screen: public std::enable_shared_from_this<Screen> {
     private:
         void commonInit();
 
+        void setRootWidget(const std::shared_ptr<Widget> &newRoot);
+
     private:
         /// Pixel format of the screen
         PixelFormat format;
@@ -210,6 +213,8 @@ class Screen: public std::enable_shared_from_this<Screen> {
         Color backgroundColor;
         /// Root widget, which receives all events and draw requests
         std::shared_ptr<Widget> rootWidget;
+        /// Root view controller
+        std::shared_ptr<ViewController> rootVc;
 
         /// Animation coordinator instance
         std::shared_ptr<Animator> anim;
