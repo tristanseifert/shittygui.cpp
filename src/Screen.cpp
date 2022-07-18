@@ -292,8 +292,6 @@ void Screen::processEvents() {
                 if(this->rootWidget) {
                     Point targetPoint;
                     auto target = this->rootWidget->findChildAt(arg.position, targetPoint);
-                    printf("target for touch (%d, %d) = %p ('%s') (%d, %d)\n", arg.position.x, arg.position.y,
-                            target.get(), target->getDebugLabel().data(), targetPoint.x, targetPoint.y);
 
                     // try that widget
                     if(target) {

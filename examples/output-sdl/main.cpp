@@ -86,6 +86,10 @@ Lomo photo booth single-origin coffee health goth raclette YOLO franzen unicorn 
     butt->setDebugLabel("'Push me' button");
     butt->setTitle("Push me");
     butt->setIconGravity(shittygui::widgets::Button::IconGravity::Left);
+    butt->setPushCallback([](auto whomst) {
+        auto btn = std::dynamic_pointer_cast<shittygui::widgets::Button>(whomst);
+        btn->setTitle("fuk off");
+    });
 
     right->addChild(butt);
 

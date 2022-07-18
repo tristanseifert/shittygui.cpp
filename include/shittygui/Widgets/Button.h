@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -179,6 +180,33 @@ class Button: public Widget, protected TextRendering {
             return this->borderColor;
         }
 
+        /**
+         * @brief Opt in to touch tracking
+         *
+         * This is used so we can update the selection state of the buttons when touches leave
+         * he button.
+         */
+        bool wantsTouchTracking() override {
+            return true;
+        }
+
+        bool handleTouchEvent(const event::Touch &event) override;
+
+        /**
+         * @brief Set the click callback
+         *
+         * This is executed when a touch is _up_ inside the bounds of the button.
+         */
+        inline void setPushCallback(const EventCallback &cb) {
+            this->pushCallback = cb;
+        }
+        /**
+         * @brief Remove any existing push callback
+         */
+        inline void resetPushCallback() {
+            this->pushCallback.reset();
+        }
+
     private:
         void releaseResources();
 
@@ -195,6 +223,9 @@ class Button: public Widget, protected TextRendering {
         constexpr static const std::string_view kDefaultFont{"Liberation Sans Bold"};
         /// Default button font size
         constexpr static const double kDefaultFontSize{18.};
+
+        /// Callback to invoke when button is pushed
+        std::optional<EventCallback> pushCallback;
 
         /// Button type
         Type type{Type::Push};

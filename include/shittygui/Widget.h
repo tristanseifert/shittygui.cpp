@@ -2,6 +2,7 @@
 #define SHITTYGUI_WIDGET_H
 
 #include <deque>
+#include <functional>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -31,6 +32,14 @@ class Widget: public std::enable_shared_from_this<Widget> {
     friend class Screen;
 
     public:
+        /**
+         * @brief Event handler type
+         *
+         * Widgets should use this type of function for their event callbacks. The first argument
+         * will always be a pointer to the widget from the event.
+         */
+        using EventCallback = std::function<void(const std::shared_ptr<Widget> &sender)>;
+
         /**
          * @brief Initialize a widget with the given frame
          *

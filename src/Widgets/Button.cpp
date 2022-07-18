@@ -104,7 +104,7 @@ void Button::drawTitle(cairo_t *drawCtx, const Rect &contentRect) {
 
     // draw string
     if(this->selected) {
-        this->drawString(drawCtx, rect, this->selectedTextColor);
+        this->drawString(drawCtx, rect, this->selectedTextColor, VerticalAlign::Middle);
     } else {
         this->drawString(drawCtx, rect, this->textColor, VerticalAlign::Middle);
     }
@@ -200,4 +200,27 @@ void Button::setFont(const std::string_view name, const double size) {
 
     this->fontDesc = this->getFont(name, size);
     this->fontDirty = true;
+}
+
+/**
+ * @brief Handle a touch event
+ *
+ * This will trigger the button's action when the touch is _up_ inside of the button's bounds.
+ */
+bool Button::handleTouchEvent(const event::Touch &event) {
+    const auto screenBounds = this->convertToScreenSpace(this->getBounds());
+    const auto within = screenBounds.contains(event.position);
+
+    this->selected = within & event.isDown;
+    this->needsDisplay();
+
+    if(within) {
+        if(!event.isDown) {
+            if(auto cb = *this->pushCallback) {
+                cb(this->shared_from_this());
+            }
+        }
+    }
+
+    return true;
 }
