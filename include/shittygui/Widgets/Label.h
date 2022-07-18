@@ -43,7 +43,7 @@ class Label: public Widget, protected TextRendering {
          * are dirtied. This is taken care of by container views.
          */
         bool isOpaque() override {
-            return false;
+            return this->drawBackground;
         }
 
         void draw(struct _cairo *drawCtx, const bool everything) override;
@@ -67,6 +67,13 @@ class Label: public Widget, protected TextRendering {
             this->content = newContent;
             this->contentDirty = true;
             this->needsDisplay();
+
+            // if we do not draw our own background, force parent to redraw itself too
+            if(!this->drawBackground || this->background.a < 1.) {
+                if(auto parent = this->getParent()) {
+                    parent->needsDisplay();
+                }
+            }
         }
         /**
          * @brief Get the currently displayed label text
@@ -77,9 +84,14 @@ class Label: public Widget, protected TextRendering {
 
         /**
          * @brief Set the text alignment
+         *
+         * @param hAlign Horizontal text alignment
+         * @param vAlign Vertical text alignment
          */
-        inline void setTextAlign(const TextAlign newAlign) {
-            this->align = newAlign;
+        inline void setTextAlign(const TextAlign hAlign,
+                const VerticalAlign vAlign = VerticalAlign::Top) {
+            this->hAlign = hAlign;
+            this->vAlign = vAlign;
             this->alignDirty = true;
             this->needsDisplay();
         }
@@ -87,7 +99,7 @@ class Label: public Widget, protected TextRendering {
          * @brief Get the current text alignment
          */
         constexpr inline auto getTextAlign() const {
-            return this->align;
+            return this->hAlign;
         }
 
         /**
@@ -160,11 +172,15 @@ class Label: public Widget, protected TextRendering {
 
     private:
         /// Text layout
-        TextAlign align{TextAlign::Left};
+        TextAlign hAlign{TextAlign::Left};
+        /// Vertical text alignment
+        VerticalAlign vAlign{VerticalAlign::Top};
         /// Ellipsization mode
         EllipsizeMode ellipsizationMode{EllipsizeMode::End};
         /// Text foreground color
         Color foreground;
+        /// Background color
+        Color background;
 
         /// Content value of the label
         std::string content;
@@ -186,6 +202,8 @@ class Label: public Widget, protected TextRendering {
         uintptr_t justified             :1{false};
         /// Does the text word wrap to support multiple lines?
         uintptr_t wordWrap              :1{false};
+        /// Do we draw a background color?
+        uintptr_t drawBackground        :1{false};
 };
 }
 

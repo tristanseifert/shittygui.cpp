@@ -3,6 +3,8 @@
 
 #include <string_view>
 
+#include <shittygui/Types.h>
+
 namespace shittygui {
 /**
  * @brief Text rendering helper class
@@ -16,13 +18,6 @@ class TextRendering {
         ~TextRendering();
 
     protected:
-        /// Vertical text alignment
-        enum class VerticalAlign {
-            Top,
-            Middle,
-            Bottom
-        };
-
         /// Check whether we have text resources instantiated
         constexpr inline bool hasTextResources() const {
             return (this->layout != nullptr);

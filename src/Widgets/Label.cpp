@@ -37,12 +37,21 @@ void Label::releaseResources() {
 void Label::draw(cairo_t *drawCtx, const bool everything) {
     const auto &bounds = this->getBounds();
 
+    // render background
+    if(this->drawBackground) {
+        cairo::SetSource(drawCtx, this->background);
+
+        cairo::Rectangle(drawCtx, bounds);
+        cairo_fill(drawCtx);
+    }
+
+    // render the string
     if(!this->hasTextResources()) {
         this->initTextResources(drawCtx);
     }
 
     this->updateLayout();
-    this->drawString(drawCtx, bounds, this->foreground);
+    this->drawString(drawCtx, bounds, this->foreground, this->vAlign);
 
     Widget::draw(drawCtx, everything);
 }
@@ -67,7 +76,7 @@ void Label::updateLayout() {
 
     // text alignment and justification
     if(this->alignDirty) {
-        this->setTextLayoutAlign(this->align, this->justified);
+        this->setTextLayoutAlign(this->hAlign, this->justified);
         this->alignDirty = false;
     }
 

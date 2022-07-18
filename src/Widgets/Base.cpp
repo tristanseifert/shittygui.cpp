@@ -155,6 +155,11 @@ void Widget::drawChildren(cairo_t *drawCtx, const bool everything) {
     const auto &frame = this->getFrame();
     cairo_translate(drawCtx, frame.origin.x, frame.origin.y);
 
+    if(this->clipToBounds()) {
+        cairo::Rectangle(drawCtx, this->getBounds());
+        cairo_clip(drawCtx);
+    }
+
     // process each child, in the order they were added
     for(const auto &child : this->children) {
         // if the child is dirty, draw it

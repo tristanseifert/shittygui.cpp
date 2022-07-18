@@ -142,13 +142,23 @@ enum class EllipsizeMode: uint8_t {
 };
 
 /**
- * @brief Text layout alignment
+ * @brief Text layout alignment (horizontal)
  */
 enum class TextAlign: uint8_t {
     Left,
     Center,
     Right,
 };
+
+/**
+ * @brief Text layout alignment (vertical)
+ */
+enum class VerticalAlign {
+    Top,
+    Middle,
+    Bottom
+};
+
 }
 
 #endif
