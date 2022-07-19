@@ -457,6 +457,13 @@ class Widget: public std::enable_shared_from_this<Widget> {
          */
         uintptr_t inhibitDrawing                :1{false};
 
+        /**
+         * @brief Set when the widget is participating in animation
+         *
+         * During animation, we want to always redraw all widgets, regardless of their dirty state
+         */
+        uintptr_t animationParticipant          :1{false};
+
     private:
         /**
          * @brief Parent widget

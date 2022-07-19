@@ -121,11 +121,13 @@ void Widget::updateChildData() {
  * @param drawCtx Cairo drawing context
  * @param everything When set, draw everything regardless of dirty status
  */
-void Widget::drawChildren(cairo_t *drawCtx, const bool everything) {
+void Widget::drawChildren(cairo_t *drawCtx, bool everything) {
     // early abort if no children
     if(this->children.empty()) {
         return;
     }
+
+    everything |= this->animationParticipant;
 
     // translate coordinates to our origin
     cairo_save(drawCtx);
@@ -141,7 +143,7 @@ void Widget::drawChildren(cairo_t *drawCtx, const bool everything) {
     // process each child, in the order they were added
     for(const auto &child : this->children) {
         // skip if drawing is inhibited
-        if(child->inhibitDrawing) {
+        if(child->inhibitDrawing && !this->animationParticipant) {
             continue;
         }
 

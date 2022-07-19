@@ -56,7 +56,7 @@ class SecondTestViewController: public shittygui::ViewController {
             butt->setTitle("Go Away");
             butt->setPushCallback([this](auto whomst) {
                 std::cout << "going away time" << std::endl;
-                this->dismiss(false);
+                this->dismiss(true);
             });
             cont->addChild(butt);
 

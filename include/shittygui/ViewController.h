@@ -157,7 +157,7 @@ class ViewController: public std::enable_shared_from_this<ViewController> {
         /**
          * @brief Time duration for an animated presentation (seconds)
          */
-        constexpr static const double kPresentationAnimationDuration{.42};
+        constexpr static const double kPresentationAnimationDuration{.35};
 
     private:
         /**

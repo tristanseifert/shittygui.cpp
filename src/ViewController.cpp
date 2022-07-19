@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "Animator.h"
+#include "EasingFunctions.h"
 #include "Widget.h"
 #include "Screen.h"
 #include "ViewController.h"
@@ -112,8 +113,6 @@ void ViewController::dismiss(const bool isAnimated) {
  * @param anim Animation to use for the dismissal
  */
 void ViewController::dismissViewController(const PresentationAnimation anim) {
-    using namespace std::placeholders;
-
     // ensure we're already presenting
     if(!this->presenting) {
         throw std::runtime_error("Not presenting a view controller!");
@@ -129,15 +128,8 @@ void ViewController::dismissViewController(const PresentationAnimation anim) {
     for(auto &ptr : this->presentedWidgets) {
         if(auto widget = ptr.lock()) {
             widget->inhibitDrawing = false;
-
-            // recursively redraw them - this is a little agressive
-            widget->invokeCallbackRecursive(std::bind(&Widget::needsDisplay, _1));
         }
     }
-
-    this->presentedWidgets.clear();
-
-    this->getWidget()->needsDisplay();
 
     // if not animating, invoke the "did disappear" callback
     if(anim == PresentationAnimation::None) {
@@ -169,6 +161,15 @@ void ViewController::dismissFinalize() {
     // clear stored references
     this->presenting->parent.reset();
     this->presenting.reset();
+
+    // force redraw all the widgets once more
+    for(auto &ptr : this->presentedWidgets) {
+        if(auto widget = ptr.lock()) {
+            widget->animationParticipant = false;
+        }
+    }
+
+    this->presentedWidgets.clear();
 }
 
 
@@ -189,6 +190,15 @@ void ViewController::startAnimating() {
         return this->processAnimationFrame();
     });
 
+    this->getWidget()->animationParticipant = true;
+
+    // force cached widgets to redraw
+    for(const auto &ptr : this->presentedWidgets) {
+        if(auto widget = ptr.lock()) {
+            widget->animationParticipant = true;
+        }
+    }
+
     // internal bookkeeping
     this->animation.isActive = true;
     this->animation.start = std::chrono::high_resolution_clock::now();
@@ -205,6 +215,8 @@ void ViewController::endAnimating() {
         throw std::logic_error("cannot present with animation on off-screen view controller!");
     }
 
+    this->getWidget()->animationParticipant = false;
+
     // internal bookkeeping
     this->animation.isActive = false;
 }
@@ -218,6 +230,8 @@ void ViewController::endAnimating() {
  * @return Whether animation shall continue
  */
 bool ViewController::processAnimationFrame() {
+    using namespace std::placeholders;
+
     // calculate percentage
     const auto now = std::chrono::high_resolution_clock::now();
     const std::chrono::duration<double> diff = now - this->animation.start;
@@ -231,9 +245,12 @@ bool ViewController::processAnimationFrame() {
     auto widgetFrame = widget->getBounds();
 
     switch(this->animation.type) {
-        case PresentationAnimation::SlideUp:
-            widgetFrame.origin.y = static_cast<double>(ourBounds.size.height) * (1. - percent);
+        case PresentationAnimation::SlideUp: {
+            const auto frac = EasingFunctions::InOutQuad(percent);
+            widgetFrame.origin.y = static_cast<double>(ourBounds.size.height) *
+                (this->animation.presentation ? (1. - frac) : frac);
             break;
+        }
 
         // should really never happen
         case PresentationAnimation::None:
@@ -261,11 +278,15 @@ done:;
             for(const auto &ptr : this->presentedWidgets) {
                 if(auto widget = ptr.lock()) {
                     widget->inhibitDrawing = true;
+                    widget->animationParticipant = false;
                 }
             }
         } else {
             this->dismissFinalize();
         }
+
+        // mark all widgets as dirty to force a final redraw
+        this->getWidget()->invokeCallbackRecursive(std::bind(&Widget::needsDisplay, _1));
 
         // XXX: make sure the frame is properly set
 

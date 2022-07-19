@@ -13,13 +13,13 @@ using namespace shittygui::widgets;
  * We'll fill the background color and then draw an optional border.
  */
 void Container::draw(cairo_t *drawCtx, const bool everything) {
-    if(!this->dirtyFlag) {
-        return;
+    auto rect = this->getBounds();
+
+    if(!this->dirtyFlag && !everything) {
+        goto beach;
     }
 
     // set the path to use for border and rec
-    auto rect = this->getBounds();
-
     if(this->borderRadius > 0) {
         cairo::RoundedRect(drawCtx, rect, this->borderRadius);
     } else {
@@ -47,6 +47,7 @@ void Container::draw(cairo_t *drawCtx, const bool everything) {
         cairo_stroke(drawCtx);
     }
 
+beach:;
     Widget::draw(drawCtx, everything);
 }
 
