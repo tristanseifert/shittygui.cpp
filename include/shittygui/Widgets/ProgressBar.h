@@ -59,14 +59,10 @@ class ProgressBar: public Widget {
 
         void draw(struct _cairo *drawCtx, const bool everything) override;
 
-        /**
-         * @brief Opt in to animation support
-         */
-        inline bool wantsAnimation() override {
-            return true;
+        void willMoveToParent(const std::shared_ptr<Widget> &newParent) override {
+            Widget::willMoveToParent(newParent);
+            this->unregisterAnimCallback();
         }
-        void processAnimationFrame() override;
-
         /**
          * @brief Release resources when removed from view hierarchy
          */
@@ -104,6 +100,10 @@ class ProgressBar: public Widget {
          */
         inline void setStyle(const Style newStyle) {
             this->style = newStyle;
+
+            if(newStyle == Style::Determinate && this->animatorRegistered) {
+                this->unregisterAnimCallback();
+            }
         }
         /**
          * @brief Get the current progress bar style
@@ -114,6 +114,11 @@ class ProgressBar: public Widget {
 
     private:
         void releaseResources();
+
+        void registerAnimCallback();
+        void unregisterAnimCallback();
+
+        void processAnimationFrame();
 
         void updateIndeterminateFill(const Rect &);
         void drawIndeterminatePattern(_cairo *, const double, const double);
@@ -139,10 +144,19 @@ class ProgressBar: public Widget {
         /// Width of the pattern (in pixels)
         double patternWidth;
 
+        /// animator callback token
+        uint32_t animatorToken{0};
+
         /**
          * @brief Recompute the fill pattern
          */
         uintptr_t fillDirty                     :1{false};
+        /**
+         * @brief Whether we're registered with an animator
+         *
+         * This flag is used to set up the state of the animation callbacks.
+         */
+        uintptr_t animatorRegistered            :1{false};
 };
 }
 

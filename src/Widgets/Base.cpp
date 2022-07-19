@@ -236,43 +236,6 @@ void Widget::setScreen(const std::shared_ptr<Screen> &newScreen) {
     this->invokeCallbackRecursive(std::bind(&Widget::didMoveToScreen, _1, _2), newScreen);
 }
 
-/**
- * This default implementation registers the widget with the screen's animator.
- */
-void Widget::didMoveToScreen(const std::shared_ptr<Screen> &screen) {
-    if(this->wantsAnimation() && !this->animatorRegistered) {
-        screen->anim->registerWidget(this->shared_from_this());
-        this->animatorRegistered = true;
-    }
-}
-
-/**
- * Remove the widget from the current animator as we're going to change parents soon.
- */
-void Widget::willMoveToParent(const std::shared_ptr<Widget> &newParent) {
-    // remove from animator
-    if(auto anim = this->getAnimator()) {
-        anim->unregisterWidget(this->shared_from_this());
-        this->animatorRegistered = false;
-    }
-}
-
-/**
- * Register the view with the animator if it wants animation.
- *
- * @remark When subclassing, you must always invoke the base widget class implementation of this
- *         method first.
- */
-void Widget::didMoveToParent() {
-    // install in animator
-    if(this->wantsAnimation() && !this->animatorRegistered) {
-        if(auto anim = this->getAnimator()) {
-            anim->registerWidget(this->shared_from_this());
-            this->animatorRegistered = true;
-        }
-    }
-}
-
 
 
 /**

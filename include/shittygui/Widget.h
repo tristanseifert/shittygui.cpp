@@ -63,16 +63,6 @@ class Widget: public std::enable_shared_from_this<Widget> {
         }
 
         /**
-         * @brief Does the widget desire animation?
-         *
-         * When set, the widget is opted into animation support. This means it may receive a
-         * callback after every frame is rendered from the animator to update its state.
-         */
-        virtual bool wantsAnimation() {
-            return false;
-        }
-
-        /**
          * @brief Should drawing be clipped to the bounds of the widget?
          *
          * The parent widget can add a clip region to the widget to ensure nothing gets drawn
@@ -115,15 +105,6 @@ class Widget: public std::enable_shared_from_this<Widget> {
         }
         virtual void drawChildren(struct _cairo *drawCtx, const bool everything = false);
 
-        /**
-         * @brief Process an animation frame
-         *
-         * This is invoked by the animator any time a frame is rendered.
-         *
-         * @seeAlso Screen::handleAnimations()
-         */
-        virtual void processAnimationFrame() {}
-
         void addChild(const std::shared_ptr<Widget> &toAdd, const bool atStart = false);
         bool removeChild(const std::shared_ptr<Widget> &toRemove);
         /**
@@ -150,11 +131,11 @@ class Widget: public std::enable_shared_from_this<Widget> {
          *
          * @param parent Pointer to the widget's new parent
          */
-        virtual void willMoveToParent(const std::shared_ptr<Widget> &newParent);
+        virtual void willMoveToParent(const std::shared_ptr<Widget> &newParent) {}
         /**
          * @brief Invoked when the widget moved to a new parent
          */
-        virtual void didMoveToParent();
+        virtual void didMoveToParent() {}
 
         /**
          * @brief The frame rectangle of the widget has changed
@@ -224,7 +205,7 @@ class Widget: public std::enable_shared_from_this<Widget> {
          *
          * @remark Subclasses must invoke this base class implementation.
          */
-        virtual void didMoveToScreen(const std::shared_ptr<Screen> &newScreen);
+        virtual void didMoveToScreen(const std::shared_ptr<Screen> &newScreen) {};
 
     public:
         /**
@@ -443,11 +424,6 @@ class Widget: public std::enable_shared_from_this<Widget> {
          * to optimize drawing.
          */
         uintptr_t hasTransparentChildren        :1{false};
-
-        /**
-         * @brief Whether the widget has been registered with an animator
-         */
-        uintptr_t animatorRegistered            :1{false};
 
         /**
          * @brief Set to inhibit any drawing of this widget

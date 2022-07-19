@@ -3,6 +3,7 @@
 
 #include <cairo.h>
 
+#include "Animator.h"
 #include "CairoHelpers.h"
 #include "Errors.h"
 #include "Util.h"
@@ -21,6 +22,10 @@ void ProgressBar::releaseResources() {
     }
     if(this->barberPattern) {
         cairo_pattern_destroy(this->barberPattern);
+    }
+
+    if(this->animatorRegistered) {
+        this->unregisterAnimCallback();
     }
 }
 
@@ -74,6 +79,10 @@ void ProgressBar::draw(cairo_t *drawCtx, const bool everything) {
         if(!this->barberPattern || this->fillDirty) {
             this->updateIndeterminateFill(fillingRect);
             this->fillDirty = false;
+        }
+        // register animation callback if not done yet
+        if(!this->animatorRegistered) {
+            this->registerAnimCallback();
         }
 
         /*
@@ -193,4 +202,31 @@ void ProgressBar::processAnimationFrame() {
     }
 
     this->needsDisplay();
+}
+
+
+
+/**
+ * @brief Register animation callback
+ */
+void ProgressBar::registerAnimCallback() {
+    if(this->animatorRegistered) {
+        this->unregisterAnimCallback();
+    }
+
+    this->animatorToken = this->getAnimator()->registerCallback([&]() -> bool {
+        this->processAnimationFrame();
+        return true;
+    });
+    this->animatorRegistered = true;
+}
+
+/**
+ * @brief Unregister the animation callback
+ */
+void ProgressBar::unregisterAnimCallback() {
+    if(auto anim = this->getAnimator()) {
+        anim->unregisterCallback(this->animatorToken);
+        this->animatorRegistered = false;
+    }
 }

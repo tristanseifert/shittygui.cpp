@@ -21,10 +21,6 @@ class Animator {
         using Callback = std::function<bool(void)>;
 
         Animator(Screen *);
-        ~Animator();
-
-        void registerWidget(const std::shared_ptr<Widget> &widget);
-        void unregisterWidget(const std::shared_ptr<Widget> &widget);
 
         uint32_t registerCallback(const Callback &callback);
         void unregisterCallback(const uint32_t token);
@@ -33,16 +29,8 @@ class Animator {
         void frameCallback();
 
     private:
-        struct WidgetInfo {
-            /// Pointer to the widget
-            std::weak_ptr<Widget> ptr;
-        };
-
         /// Screen instance that created us
         Screen *owner{nullptr};
-
-        /// All widgets that want to be animated
-        std::list<WidgetInfo> widgets;
 
         /// Callbacks
         std::unordered_map<uint32_t, Callback> callbacks;
