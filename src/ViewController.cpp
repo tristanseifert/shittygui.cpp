@@ -185,7 +185,9 @@ void ViewController::startAnimating() {
         throw std::logic_error("cannot present with animation on off-screen view controller!");
     }
 
-    screen->getAnimator()->registerViewController(this->shared_from_this());
+    this->animation.token = screen->getAnimator()->registerCallback([&]() -> bool {
+        return this->processAnimationFrame();
+    });
 
     // internal bookkeeping
     this->animation.isActive = true;
@@ -203,8 +205,6 @@ void ViewController::endAnimating() {
         throw std::logic_error("cannot present with animation on off-screen view controller!");
     }
 
-    screen->getAnimator()->unregisterViewController(this->shared_from_this());
-
     // internal bookkeeping
     this->animation.isActive = false;
 }
@@ -214,8 +214,10 @@ void ViewController::endAnimating() {
  *
  * Perform the required actions for a step in the presentation animation. It's done in terms of
  * a percentage between the start and now.
+ *
+ * @return Whether animation shall continue
  */
-void ViewController::processAnimationFrame() {
+bool ViewController::processAnimationFrame() {
     // calculate percentage
     const auto now = std::chrono::high_resolution_clock::now();
     const std::chrono::duration<double> diff = now - this->animation.start;
@@ -266,5 +268,9 @@ done:;
         }
 
         // XXX: make sure the frame is properly set
+
+        return false;
     }
+
+    return true;
 }

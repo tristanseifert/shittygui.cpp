@@ -2,7 +2,9 @@
 #define SHITTYGUI_ANIMATOR_H
 
 #include <list>
+#include <functional>
 #include <memory>
+#include <unordered_map>
 
 namespace shittygui {
 class Widget;
@@ -15,11 +17,17 @@ class Animator {
     friend class Screen;
 
     public:
+        /// Return `false` to remove the callback
+        using Callback = std::function<bool(void)>;
+
         Animator(Screen *);
         ~Animator();
 
         void registerWidget(const std::shared_ptr<Widget> &widget);
         void unregisterWidget(const std::shared_ptr<Widget> &widget);
+
+        uint32_t registerCallback(const Callback &callback);
+        void unregisterCallback(const uint32_t token);
 
     private:
         void frameCallback();
@@ -35,6 +43,11 @@ class Animator {
 
         /// All widgets that want to be animated
         std::list<WidgetInfo> widgets;
+
+        /// Callbacks
+        std::unordered_map<uint32_t, Callback> callbacks;
+        /// Next callbacck token
+        uint32_t nextToken{0};
 };
 }
 

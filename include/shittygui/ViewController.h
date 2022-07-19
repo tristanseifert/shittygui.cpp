@@ -145,20 +145,13 @@ class ViewController: public std::enable_shared_from_this<ViewController> {
             return this->parent.lock();
         }
 
-        /**
-         * @brief Process animations
-         *
-         * Handles the presentation animations.
-         *
-         * @remark Subclasses must invoke this superclass implementation.
-         */
-        virtual void processAnimationFrame();
-
     private:
         void dismissFinalize();
 
         void startAnimating();
         void endAnimating();
+
+        bool processAnimationFrame();
 
     private:
         /**
@@ -200,6 +193,8 @@ class ViewController: public std::enable_shared_from_this<ViewController> {
         struct {
             /// When was the animation started?
             std::chrono::high_resolution_clock::time_point start;
+            /// Callback token
+            uint32_t token;
 
             /// What type of animation is used?
             PresentationAnimation type{PresentationAnimation::None};
