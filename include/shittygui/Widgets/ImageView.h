@@ -65,6 +65,7 @@ class ImageView: public Widget {
          * @brief Dirty the image transform matrix when our frame (size) changes
          */
         void frameDidChange() override {
+            Widget::frameDidChange();
             this->imageMatrixDirty = true;
         }
 

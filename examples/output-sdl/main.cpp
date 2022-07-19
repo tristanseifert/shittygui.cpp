@@ -26,6 +26,75 @@ constexpr static const shittygui::Size kWindowSize{800, 480};
 /// Flag set for as long as we should keep running the UI task
 std::atomic_bool gRun{true};
 
+class SecondTestViewController: public shittygui::ViewController {
+    public:
+        SecondTestViewController() {
+            // create outer container
+            auto cont = shittygui::MakeWidget<shittygui::widgets::Container>({0, 0}, {800, 480});
+            cont->setDrawsBorder(false);
+            cont->setBorderRadius(0.);
+            cont->setBackgroundColor({0.2, 0, 0});
+
+            // label
+            auto title = shittygui::MakeWidget<shittygui::widgets::Label>({10, 10}, {780, 50},
+                    "Welcome to the chill zone");
+            title->setFont("Avenir Next Italic", 24);
+            title->setTextAlign(shittygui::TextAlign::Center);
+            title->setTextColor({1, 1, 1});
+            cont->addChild(title);
+
+            // icon
+            auto tree = shittygui::Image::Read("./tree.png");
+
+            cont->addChild(shittygui::MakeWidget<shittygui::widgets::ImageView>({10, 100}, {48, 48},
+                    tree, shittygui::widgets::ImageView::Mode::None));
+
+            // close btn
+            auto butt = shittygui::MakeWidget<shittygui::widgets::Button>({560, 400}, {200, 38},
+                    shittygui::widgets::Button::Type::Push);
+            butt->setDebugLabel("'Push me' button");
+            butt->setTitle("Go Away");
+            butt->setPushCallback([this](auto whomst) {
+                std::cout << "going away time" << std::endl;
+                this->dismiss(false);
+            });
+            cont->addChild(butt);
+
+            // store it as the root
+            this->view = std::move(cont);
+        }
+
+        /// Get our root view
+        std::shared_ptr<shittygui::Widget> &getWidget() override {
+            return this->view;
+        }
+
+        /// Return a dummy title
+        std::string_view getTitle() override {
+            return "Test View Controller";
+        }
+
+        void viewWillAppear(const bool isAnimated) override {
+            ViewController::viewWillAppear(isAnimated);
+            printf("Test controller %p will appear (animated=%d)\n", this, isAnimated ? 1 : 0);
+        }
+        void viewDidAppear() override {
+            ViewController::viewDidAppear();
+            printf("Test controller %p did appear\n", this);
+        }
+        void viewWillDisappear(const bool isAnimated) override {
+            ViewController::viewWillDisappear(isAnimated);
+            printf("Test controller %p will disappear (animated=%d)\n", this, isAnimated ? 1 : 0);
+        }
+        void viewDidDisappear() override {
+            ViewController::viewDidDisappear();
+            printf("Test controller %p did disappear\n", this);
+        }
+
+    private:
+        std::shared_ptr<shittygui::Widget> view;
+};
+
 class TestViewController: public shittygui::ViewController {
     public:
         /**
@@ -89,9 +158,13 @@ class TestViewController: public shittygui::ViewController {
             butt->setDebugLabel("'Push me' button");
             butt->setTitle("Push me");
             butt->setIconGravity(shittygui::widgets::Button::IconGravity::Left);
-            butt->setPushCallback([](auto whomst) {
+            butt->setPushCallback([this](auto whomst) {
                 auto btn = std::dynamic_pointer_cast<shittygui::widgets::Button>(whomst);
                 btn->setTitle("fuk off");
+
+                std::cout << "presentment time" << std::endl;
+                auto vc = std::make_shared<SecondTestViewController>();
+                this->presentViewController(vc, true);
             });
 
             right->addChild(butt);

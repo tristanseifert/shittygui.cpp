@@ -1,8 +1,8 @@
 #ifndef SHITTYGUI_WIDGET_H
 #define SHITTYGUI_WIDGET_H
 
-#include <deque>
 #include <functional>
+#include <list>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -30,6 +30,7 @@ class Screen;
  */
 class Widget: public std::enable_shared_from_this<Widget> {
     friend class Screen;
+    friend class ViewController;
 
     public:
         /**
@@ -125,7 +126,17 @@ class Widget: public std::enable_shared_from_this<Widget> {
 
         void addChild(const std::shared_ptr<Widget> &toAdd, const bool atStart = false);
         bool removeChild(const std::shared_ptr<Widget> &toRemove);
-        bool removeFromParent();
+        /**
+         * @brief Remove the widget from its parent
+         */
+        bool removeFromParent() {
+            auto parent = this->getParent();
+            if(!parent) {
+                return false;
+            }
+
+            return parent->removeChild(this->shared_from_this());
+        }
 
         /**
          * @brief Whether this view has any children
@@ -147,8 +158,10 @@ class Widget: public std::enable_shared_from_this<Widget> {
 
         /**
          * @brief The frame rectangle of the widget has changed
+         *
+         * @remark Subclasses must invoke this base class implementation.
          */
-        virtual void frameDidChange() {}
+        virtual void frameDidChange();
 
         /**
          * @brief Get the frame rectangle of the widget
@@ -361,7 +374,7 @@ class Widget: public std::enable_shared_from_this<Widget> {
          * @tparam Args Argument pack for the callback function
          */
         template<typename Func, typename... Args>
-        void invokeCallbackRecursive(std::deque<std::shared_ptr<Widget>> &widgets, Func what, Args&&... args) {
+        void invokeCallbackRecursive(std::list<std::shared_ptr<Widget>> &widgets, Func what, Args&&... args) {
             for(auto &child : widgets) {
                 what(child, std::forward<Args>(args)...);
 
@@ -436,6 +449,14 @@ class Widget: public std::enable_shared_from_this<Widget> {
          */
         uintptr_t animatorRegistered            :1{false};
 
+        /**
+         * @brief Set to inhibit any drawing of this widget
+         *
+         * This is set by view controllers during animations; for example, to prevent any animated
+         * widgets _under_ the presented view from rendering.
+         */
+        uintptr_t inhibitDrawing                :1{false};
+
     private:
         /**
          * @brief Parent widget
@@ -459,7 +480,7 @@ class Widget: public std::enable_shared_from_this<Widget> {
          *
          * Pointers to all children added to widget.
          */
-        std::deque<std::shared_ptr<Widget>> children;
+        std::list<std::shared_ptr<Widget>> children;
 };
 
 /**

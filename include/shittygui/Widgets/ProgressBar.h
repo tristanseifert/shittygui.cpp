@@ -78,6 +78,7 @@ class ProgressBar: public Widget {
          * @brief When the frame changes, re-create the fill patterns
          */
         void frameDidChange() override {
+            Widget::frameDidChange();
             this->fillDirty = true;
             this->needsDisplay();
         }

@@ -216,8 +216,8 @@ bool Button::handleTouchEvent(const event::Touch &event) {
 
     if(within) {
         if(!event.isDown) {
-            if(auto cb = *this->pushCallback) {
-                cb(this->shared_from_this());
+            if(this->pushCallback) {
+                (*this->pushCallback)(this->shared_from_this());
             }
         }
     }

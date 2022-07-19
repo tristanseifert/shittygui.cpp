@@ -64,49 +64,27 @@ bool Widget::removeChild(const std::shared_ptr<Widget> &toRemove) {
         throw std::invalid_argument("invalid widget ptr");
     }
 
-    // erase matching elements and store them
-    std::vector<std::shared_ptr<Widget>> removed;
-    transfer_if_not(this->children, removed, [&](auto &childPtr) {
-        return (childPtr == toRemove);
-    });
-    // invoke the appropriate callback
-    std::for_each(removed.begin(), removed.end(), std::bind(&Widget::willMoveToParent, _1,
-                nullptr));
-    std::for_each(removed.begin(), removed.end(), std::bind(&Widget::didMoveToParent, _1));
-    std::for_each(removed.begin(), removed.end(), [](auto widget) {
-        widget->parent.reset();
-    });
+    for(auto it = this->children.begin(); it != this->children.end(); ++it) {
+        auto child = *it;
+        if(child != toRemove) {
+            continue;
+        }
 
-    this->updateChildData();
+        // remove this bad boy
+        child->willMoveToParent(nullptr);
 
-    return !removed.empty();
-}
+        child->parent.reset();
+        child->didMoveToParent();
 
-/**
- * @brief Remove this widget from its parent
- */
-bool Widget::removeFromParent() {
-    using namespace std::placeholders;
+        // erase the entry
+        this->children.erase(it);
 
-    auto ptr = this->parent.lock();
-    if(!ptr) {
-        return false;
+        this->updateChildData();
+        return true;
     }
 
-    std::vector<std::shared_ptr<Widget>> removed;
-    transfer_if_not(ptr->children, removed, [this](auto &childPtr) {
-        return (childPtr.get() == this);
-    });
-    std::for_each(removed.begin(), removed.end(), std::bind(&Widget::willMoveToParent, _1,
-                nullptr));
-    std::for_each(removed.begin(), removed.end(), std::bind(&Widget::didMoveToParent, _1));
-    std::for_each(removed.begin(), removed.end(), [](auto widget) {
-        widget->parent.reset();
-    });
-
-    this->updateChildData();
-
-    return !removed.empty();
+    // not found
+    return false;
 }
 
 /**
@@ -162,6 +140,11 @@ void Widget::drawChildren(cairo_t *drawCtx, const bool everything) {
 
     // process each child, in the order they were added
     for(const auto &child : this->children) {
+        // skip if drawing is inhibited
+        if(child->inhibitDrawing) {
+            continue;
+        }
+
         // if the child is dirty, draw it
         if(child->isDirty() || everything) {
             const auto &childFrame = child->getFrame();
@@ -220,6 +203,19 @@ void Widget::needsChildDisplay() {
     }
 
     this->childrenDirtyFlag = true;
+}
+
+/**
+ * This will notify our parent (or, if there is none, the screen) that it needs to redraw
+ * everything.
+ */
+void Widget::frameDidChange() {
+    if(auto parent = this->getParent()) {
+        parent->childrenDirtyFlag = true;
+        parent->needsDisplay();
+    } else if(auto screen = this->getScreen()) {
+        screen->needsDisplay();
+    }
 }
 
 
@@ -296,8 +292,14 @@ std::shared_ptr<Widget> Widget::findChildAt(const Point at, Point &outRelativePo
         return nullptr;
     }
 
-    // check all children
-    for(const auto &child : this->children) {
+    /*
+     * Check all children, but in the reverse order. This is needed because widgets are drawn in
+     * back to front order, so the widgets at the very end of the child list will be the visible
+     * ones if there's any overlap.
+     */
+    for(auto it = this->children.rbegin(); it != this->children.rend(); ++it) {
+        const auto &child = *it;
+
         // translate the point to the child's origin
         const auto &childFrame = child->getFrame();
         const auto translated = Point(at.x - childFrame.origin.x, at.y - childFrame.origin.y);
