@@ -172,6 +172,15 @@ class Label: public Widget, protected TextRendering {
 
         void setFont(const std::string_view name, const double size);
 
+        /**
+         * @brief Set the label's background color
+         */
+        inline void setBackgroundColor(const Color &color) {
+            this->background = color;
+            this->drawBackground = true;
+            this->needsDisplay();
+        }
+
     private:
         void releaseResources();
 
