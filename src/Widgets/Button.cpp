@@ -162,7 +162,7 @@ void Button::drawIcon(cairo_t *drawCtx, const Rect &contentRect) {
  */
 void Button::updateTextLayout() {
     if(this->titleDirty) {
-        pango_layout_set_text(this->layout, this->title.c_str(), this->title.length());
+        this->setTextContent(this->title, false);
         this->titleDirty = false;
     }
 

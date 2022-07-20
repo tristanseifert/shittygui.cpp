@@ -27,13 +27,16 @@ class TextRendering {
 
         struct _PangoFontDescription *getFont(const std::string_view name, const double size) const;
         void drawString(struct _cairo *drawCtx, const Rect &bounds, const Color &color,
-                const std::string_view &str, const VerticalAlign valign = VerticalAlign::Top);
+                const std::string_view &str, const VerticalAlign valign = VerticalAlign::Top,
+                const bool parseMarkup = false);
         void drawString(struct _cairo *drawCtx, const Rect &bounds, const Color &color,
                 const VerticalAlign valign = VerticalAlign::Top);
 
         void setTextLayoutAlign(const TextAlign newAlign, const bool justified);
         void setTextLayoutEllipsization(const EllipsizeMode newMode);
         void setTextLayoutWrapMode(const bool multiParagraph, const bool wordWrap);
+
+        void setTextContent(const std::string_view &str, const bool parseMarkup = false);
 
     protected:
         /// Pango text layout object

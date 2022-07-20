@@ -114,7 +114,7 @@ class TestViewController: public shittygui::ViewController {
             left->setDebugLabel("Left container");
 
             auto leftLabel = shittygui::MakeWidget<shittygui::widgets::Label>({2, 0}, {356, 45},
-                    "Hello World!");
+                    "Hello <i>World</i>!", true);
             leftLabel->setFont("Avenir Next Bold", 24);
             leftLabel->setTextAlign(shittygui::TextAlign::Center);
             leftLabel->setTextColor({1, 1, 1});

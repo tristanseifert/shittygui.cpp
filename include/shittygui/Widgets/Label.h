@@ -28,9 +28,13 @@ class Label: public Widget, protected TextRendering {
         Label(const Rect &rect) : Widget(rect) {}
         /**
          * @brief Initialize a label with given frame and content
+         *
+         * @param text Initial string to display on the widget
+         * @param hasMarkup Whether the string contains Pango markup
          */
-        Label(const Rect &rect, const std::string_view text) : Widget(rect) {
-            this->setContent(text);
+        Label(const Rect &rect, const std::string_view text, const bool hasMarkup = false) :
+            Widget(rect) {
+            this->setContent(text, hasMarkup);
         }
 
         /**
@@ -62,10 +66,13 @@ class Label: public Widget, protected TextRendering {
 
         /**
          * @brief Set the text displayed on the label
+         *
+         * @param hasMarkup Whether the string contains Pango markup
          */
-        inline void setContent(const std::string_view newContent) {
+        inline void setContent(const std::string_view newContent, const bool hasMarkup = false) {
             this->content = newContent;
             this->contentDirty = true;
+            this->contentHasMarkup = hasMarkup;
             this->needsDisplay();
 
             // if we do not draw our own background, force parent to redraw itself too
@@ -189,6 +196,8 @@ class Label: public Widget, protected TextRendering {
 
         /// Set when the text content changes
         uintptr_t contentDirty          :1{false};
+        /// Whether the content has embedded Pango markup
+        uintptr_t contentHasMarkup      :1{false};
         /// Set when the font has been changed
         uintptr_t fontDirty             :1{false};
         /// Set when the alignment changes (includes justification)

@@ -62,12 +62,13 @@ PangoFontDescription *TextRendering::getFont(const std::string_view name, const 
  * @param bounds Frame rectangle of the resulting text
  * @param color Color to render the text in
  * @param str String to render (it is applied to the layout)
+ * @param parseMarkup Whether Pango markup should be parsed in the string content
  *
  * @remark The render context should have its "current point" set as the origin of the text.
  */
 void TextRendering::drawString(cairo_t *drawCtx, const Rect &bounds, const Color &color,
-        const std::string_view &str, const VerticalAlign valign) {
-    pango_layout_set_text(this->layout, str.data(), str.length());
+        const std::string_view &str, const VerticalAlign valign, const bool parseMarkup) {
+    this->setTextContent(str, parseMarkup);
     this->drawString(drawCtx, bounds, color, valign);
 }
 
@@ -176,4 +177,50 @@ void TextRendering::setTextLayoutWrapMode(const bool multiParagraph, const bool 
         pango_layout_set_wrap(this->layout, PANGO_WRAP_CHAR);
     }
     pango_layout_set_single_paragraph_mode(this->layout, !multiParagraph);
+}
+
+
+
+/**
+ * @brief Set the text content of the text layout context
+ *
+ * Update the string content that will be drawn by the layout context. If specified, the text can
+ * be parsed for attributes which affect how it is rendered; this is implemented by Pango, see
+ * [this page](https://docs.gtk.org/Pango/pango_markup.html) for documentation on the markup
+ * format.
+ *
+ * @param str String to set
+ * @param parseMarkup Whether Pango markup should be parsed
+ *
+ * @remark Note that when markup is parsed, any existing attributes are replaced.
+ */
+void TextRendering::setTextContent(const std::string_view &str, const bool parseMarkup) {
+    if(!parseMarkup) {
+        pango_layout_set_text(this->layout, str.data(), str.length());
+    } else {
+        PangoAttrList *attrList{nullptr};
+        char *strippedStr{nullptr};
+        GError *outError{nullptr};
+
+        // parse markup
+        auto ret = pango_parse_markup(str.data(), str.length(), 0, &attrList, &strippedStr,
+                nullptr, &outError);
+        if(!ret) {
+            if(outError) {
+                fprintf(stderr, "shittygui: %s failed (%u): %s\n", "pango_parse_markup",
+                        outError->code, outError->message);
+                throw std::runtime_error(outError->message);
+            } else {
+                throw std::runtime_error("unspecified error in pango_parse_markup");
+            }
+        }
+
+        // apply text and attributes
+        pango_layout_set_text(this->layout, strippedStr, -1);
+        pango_layout_set_attributes(this->layout, attrList);
+
+        // clean up
+        free(strippedStr);
+        pango_attr_list_unref(attrList);
+    }
 }

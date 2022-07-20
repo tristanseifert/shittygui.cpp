@@ -64,7 +64,7 @@ void Label::draw(cairo_t *drawCtx, const bool everything) {
 void Label::updateLayout() {
     // text content
     if(this->contentDirty) {
-        pango_layout_set_text(this->layout, this->content.c_str(), this->content.length());
+        this->setTextContent(this->content, this->contentHasMarkup);
         this->contentDirty = false;
     }
 
