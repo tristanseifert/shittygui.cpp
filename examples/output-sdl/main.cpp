@@ -7,6 +7,7 @@
 #include <shittygui/Screen.h>
 #include <shittygui/ViewController.h>
 #include <shittygui/Widgets/Button.h>
+#include <shittygui/Widgets/Checkbox.h>
 #include <shittygui/Widgets/Container.h>
 #include <shittygui/Widgets/ImageView.h>
 #include <shittygui/Widgets/Label.h>
@@ -42,6 +43,14 @@ class SecondTestViewController: public shittygui::ViewController {
             title->setTextAlign(shittygui::TextAlign::Center);
             title->setTextColor({1, 1, 1});
             cont->addChild(title);
+
+            // check boi
+            auto check = shittygui::MakeWidget<shittygui::widgets::Checkbox>({10, 50}, {32, 32});
+            check->setPushCallback([](auto whomst) {
+                auto checkboi = std::dynamic_pointer_cast<shittygui::widgets::Checkbox>(whomst);
+                printf("check state: %d\n", checkboi->isChecked());
+            });
+            cont->addChild(check);
 
             // icon
             auto tree = shittygui::Image::Read("./tree.png");

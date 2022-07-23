@@ -22,11 +22,10 @@ Button::~Button() {
  */
 void Button::drawPushButton(cairo_t *drawCtx, const bool everything) {
     const auto &bounds = this->getBounds();
+    const auto contentBounds = bounds.inset(this->borderWidth);
 
     // draw filling
-    const auto fillingBounds = bounds.inset(this->borderWidth);
-
-    cairo::RoundedRect(drawCtx, fillingBounds, this->borderRadius);
+    cairo::RoundedRect(drawCtx, bounds, this->borderRadius);
 
     if(this->selected) {
         cairo::SetSource(drawCtx, this->selectedFillingColor);
@@ -48,12 +47,12 @@ void Button::drawPushButton(cairo_t *drawCtx, const bool everything) {
 
     // draw icon
     if(this->shouldRenderIcon && this->icon) {
-        this->drawIcon(drawCtx, fillingBounds);
+        this->drawIcon(drawCtx, contentBounds);
     }
 
     // draw text
     if(this->shouldRenderTitle && !this->title.empty()) {
-        this->drawTitle(drawCtx, fillingBounds);
+        this->drawTitle(drawCtx, contentBounds);
     }
 }
 
