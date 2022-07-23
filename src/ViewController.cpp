@@ -71,7 +71,10 @@ void ViewController::presentViewController(const std::shared_ptr<ViewController>
 
     // if not animating, invoke the "did appear" callback
     if(anim == PresentationAnimation::None) {
+        // TODO: determine if we're fully obscured
+        this->viewWillDisappear(false);
         vc->viewDidAppear();
+        this->viewDidDisappear();
 
         // also ensure the widgets below stop rendering immediately
         for(const auto &ptr : this->presentedWidgets) {
@@ -133,7 +136,9 @@ void ViewController::dismissViewController(const PresentationAnimation anim) {
 
     // if not animating, invoke the "did disappear" callback
     if(anim == PresentationAnimation::None) {
+        this->viewWillAppear(false);
         this->dismissFinalize();
+        this->viewDidAppear();
     }
     // otherwise, begin animation processing
     else {
@@ -201,6 +206,15 @@ void ViewController::startAnimating() {
 
     screen->setEventsInhibited(true);
 
+    // TODO: determine if we're going to be completely obscured here
+    if(this->animation.parentObscured) {
+        if(this->animation.presentation) {
+            this->viewWillDisappear(true);
+        } else {
+            this->viewWillAppear(true);
+        }
+    }
+
     // internal bookkeeping
     this->animation.isActive = true;
     this->animation.start = std::chrono::high_resolution_clock::now();
@@ -220,6 +234,14 @@ void ViewController::endAnimating() {
     this->getWidget()->animationParticipant = false;
 
     screen->setEventsInhibited(false);
+
+    if(this->animation.parentObscured) {
+        if(this->animation.presentation) {
+            this->viewDidDisappear();
+        } else {
+            this->viewDidAppear();
+        }
+    }
 
     // internal bookkeeping
     this->animation.isActive = false;

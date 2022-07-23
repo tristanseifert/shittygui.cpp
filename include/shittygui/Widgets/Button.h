@@ -165,6 +165,20 @@ class Button: public Widget, protected TextRendering {
         }
 
         /**
+         * @brief Set the radius of the container's border
+         */
+        inline void setBorderRadius(const double newRadius) {
+            this->borderRadius = newRadius;
+            this->needsDisplay();
+        }
+        /**
+         * @brief Get the current border radius
+         */
+        constexpr inline auto getBorderRadius() const {
+            return this->borderRadius;
+        }
+
+        /**
          * @brief Set the color of the border
          *
          * @param normalColor new border color

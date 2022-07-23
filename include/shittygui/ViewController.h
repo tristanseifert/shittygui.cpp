@@ -203,6 +203,8 @@ class ViewController: public std::enable_shared_from_this<ViewController> {
             uint8_t isActive                    :1{false};
             /// Whether the animation is for presentation (`true`) or dismissal (`false`)
             uint8_t presentation                :1{false};
+            /// Whether the parent view controller is fully obscured
+            uint8_t parentObscured              :1{true};
         } animation;
 };
 }
