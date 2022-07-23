@@ -102,7 +102,7 @@ bool ToggleButtonBase::handleTouchEvent(const event::Touch &event) {
 
     if(within) {
         if(!event.isDown) {
-            this->checked = !this->checked;
+            this->updateStateFromTouch();
 
             if(this->pushCallback) {
                 (*this->pushCallback)(this->shared_from_this());

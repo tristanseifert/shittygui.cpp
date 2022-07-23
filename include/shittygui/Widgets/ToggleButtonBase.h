@@ -134,6 +134,11 @@ class ToggleButtonBase: public Widget, protected TextRendering {
         void drawLabel(struct _cairo *, const bool);
         void updateTextLayout();
 
+        /**
+         * @brief Update internal state in response to a touch event
+         */
+        virtual void updateStateFromTouch() = 0;
+
     protected:
         /// Callback to invoke when button is pushed
         std::optional<EventCallback> pushCallback;

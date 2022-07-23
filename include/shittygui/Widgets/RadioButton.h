@@ -1,30 +1,26 @@
-#ifndef SHITTYGUI_WIDGETS_CHECKBOX_H
-#define SHITTYGUI_WIDGETS_CHECKBOX_H
+#ifndef SHITTYGUI_WIDGETS_RADIOBUTTON_H
+#define SHITTYGUI_WIDGETS_RADIOBUTTON_H
 
-#include <cstddef>
-#include <cstdint>
-#include <optional>
-#include <string>
-
+#include <shittygui/Types.h>
 #include <shittygui/Widgets/ToggleButtonBase.h>
 
 namespace shittygui::widgets {
 /**
- * @brief Binary checkbox widget
+ * @brief Binary radio button widget
  *
- * This renders a rectangular checkbox, which is either checked or not checked. It behaves
+ * This renders a circular radio button, which is either checked or not checked. It behaves
  * similarly to a button, but automatically changes state when tapped.
  */
-class Checkbox: public ToggleButtonBase {
+class RadioButton: public ToggleButtonBase {
     public:
-        Checkbox(const Rect &rect) : ToggleButtonBase(rect) {}
-        Checkbox(const Rect &rect, const bool isChecked) : ToggleButtonBase(rect) {
+        RadioButton(const Rect &rect) : ToggleButtonBase(rect) {}
+        RadioButton(const Rect &rect, const bool isChecked) : ToggleButtonBase(rect) {
             this->setChecked(isChecked);
         }
-        Checkbox(const Rect &rect, const std::string_view &label) : ToggleButtonBase(rect) {
+        RadioButton(const Rect &rect, const std::string_view &label) : ToggleButtonBase(rect) {
             this->setLabel(label);
         }
-        Checkbox(const Rect &rect, const bool isChecked, const std::string_view &label) :
+        RadioButton(const Rect &rect, const bool isChecked, const std::string_view &label) :
             ToggleButtonBase(rect) {
             this->setLabel(label);
             this->setChecked(isChecked);
@@ -63,20 +59,6 @@ class Checkbox: public ToggleButtonBase {
         }
 
         /**
-         * @brief Set the radius of the container's border
-         */
-        inline void setBorderRadius(const double newRadius) {
-            this->borderRadius = newRadius;
-            this->needsDisplay();
-        }
-        /**
-         * @brief Get the current border radius
-         */
-        constexpr inline auto getBorderRadius() const {
-            return this->borderRadius;
-        }
-
-        /**
          * @brief Set the regular filling color
          */
         inline void setRegularFillingColor(const Color &color) {
@@ -103,39 +85,39 @@ class Checkbox: public ToggleButtonBase {
         }
 
         /**
-         * @brief Set the regular check color
+         * @brief Set the regular dot color
          */
-        inline void setRegularCheckColor(const Color &color) {
-            this->checkColor = color;
+        inline void setRegularIndicatorColor(const Color &color) {
+            this->indicatorColor = color;
         }
         /**
-         * @brief Get the current regular check color
+         * @brief Get the current regular indicator color
          */
-        constexpr inline auto &getRegularCheckColor() const {
-            return this->checkColor;
+        constexpr inline auto &getRegularIndicatorColor() const {
+            return this->indicatorColor;
         }
 
         /**
-         * @brief Set the selected check color
+         * @brief Set the selected indicator color
          */
-        inline void setSelectedCheckColor(const Color &color) {
-            this->selectedCheckColor = color;
+        inline void setSelectedIndicatorColor(const Color &color) {
+            this->selectedIndicatorColor = color;
         }
         /**
-         * @brief Get the current selected check color
+         * @brief Get the current selected indicator color
          */
-        constexpr inline auto &getSelectedCheckColor() const {
-            return this->selectedCheckColor;
+        constexpr inline auto &getSelectedIndicatorColor() const {
+            return this->selectedIndicatorColor;
         }
 
     private:
         void drawCheck(struct _cairo *, const bool) override;
 
         /**
-         * @brief Toggle the value of the checkbox on touch
+         * @brief Set this radio button as checked on touch event
          */
         void updateStateFromTouch() override {
-            this->checked = !this->checked;
+            this->checked = true;
         }
 
     private:
@@ -143,19 +125,19 @@ class Checkbox: public ToggleButtonBase {
         Color borderColor{.5, .5, .5};
         /// Border width
         double borderWidth{1.};
-        /// Border radius (for standard push buttons)
-        double borderRadius{3.};
 
         /// Filling color (normal state)
         Color fillingColor{.125, .125, .125};
-        /// Check color (normal state)
-        Color checkColor{.74, .15, .15};
+        /// Indicator color (normal state)
+        Color indicatorColor{.74, .15, .15};
 
         /// Filling color (selected state)
         Color selectedFillingColor{.42, .42, .42};
-        /// Check color (selected state)
-        Color selectedCheckColor{.74, .25, .25};
+        /// Indicator color (selected state)
+        Color selectedIndicatorColor{.74, .25, .25};
 };
+
 }
+
 
 #endif
