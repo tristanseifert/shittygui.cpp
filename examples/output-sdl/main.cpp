@@ -45,7 +45,9 @@ class SecondTestViewController: public shittygui::ViewController {
             cont->addChild(title);
 
             // check boi
-            auto check = shittygui::MakeWidget<shittygui::widgets::Checkbox>({10, 50}, {32, 32});
+            auto check = shittygui::MakeWidget<shittygui::widgets::Checkbox>({10, 50}, {240, 32},
+                    false, "weed smoking");
+            check->setFont("Avenir Next", 18);
             check->setPushCallback([](auto whomst) {
                 auto checkboi = std::dynamic_pointer_cast<shittygui::widgets::Checkbox>(whomst);
                 printf("check state: %d\n", checkboi->isChecked());
