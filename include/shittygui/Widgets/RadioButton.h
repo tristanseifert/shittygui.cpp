@@ -1,6 +1,14 @@
 #ifndef SHITTYGUI_WIDGETS_RADIOBUTTON_H
 #define SHITTYGUI_WIDGETS_RADIOBUTTON_H
 
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <optional>
+#include <span>
+#include <string_view>
+
 #include <shittygui/Types.h>
 #include <shittygui/Widgets/ToggleButtonBase.h>
 
@@ -12,6 +20,43 @@ namespace shittygui::widgets {
  * similarly to a button, but automatically changes state when tapped.
  */
 class RadioButton: public ToggleButtonBase {
+    public:
+        /**
+         * @brief Information for a single radio button in a radio group
+         */
+        struct GroupEntry {
+            /// Frame rectangle of the radio button (relative to the radio group's origin)
+            Rect rect;
+            /// Label to apply to the button
+            std::string_view label;
+
+            /// Tag value associated with the entry
+            uintptr_t tag;
+
+            /// Whether this option is pre-selected
+            bool isChecked{false};
+        };
+
+        /**
+         * @brief Callback to invoke when a radio group's value changes
+         */
+        using GroupCallback = std::function<void(const std::shared_ptr<RadioButton> &whomst,
+                const uintptr_t tag)>;
+        /**
+         * @brief Callback invoked to prepare radio group members for appearance
+         *
+         * This can be used by applications to apply their custom styles to radio group members.
+         */
+        using GroupPrepareCallback = std::function<void(const std::shared_ptr<RadioButton> &)>;
+
+        static std::shared_ptr<Widget> MakeRadioGroup(std::span<const GroupEntry> options,
+                const GroupCallback &changeCb,
+                std::optional<const GroupPrepareCallback> preparer = std::nullopt);
+
+    private:
+        static void ValidateAndProcessOptions(std::span<const GroupEntry> options, Size &outSize);
+        static void UncheckAllOthers(const std::shared_ptr<RadioButton> &);
+
     public:
         RadioButton(const Rect &rect) : ToggleButtonBase(rect) {}
         RadioButton(const Rect &rect, const bool isChecked) : ToggleButtonBase(rect) {

@@ -179,6 +179,14 @@ class Widget: public std::enable_shared_from_this<Widget> {
             this->frameDidChange();
         }
         /**
+         * @brief Set the origin of the frame rectangle
+         */
+        void setFrameOrigin(const Point newOrigin) {
+            this->frame.origin = newOrigin;
+            this->needsDisplay();
+            this->frameDidChange();
+        }
+        /**
          * @brief Get the bounds rectangle of the widget
          */
         constexpr inline auto getBounds() const {
@@ -309,6 +317,29 @@ class Widget: public std::enable_shared_from_this<Widget> {
             return this->debugLabel;
         }
 
+        /**
+         * @brief Set the tag
+         */
+        inline void setTag(const uintptr_t newTag) {
+            this->tag = newTag;
+        }
+        /**
+         * @brief Get the widget's tag
+         */
+        constexpr inline auto getTag() const {
+            return this->tag;
+        }
+
+        /**
+         * @brief Apply a method on all child widgets
+         */
+        template<typename Func, typename... Args>
+        inline void forEachChild(Func what, Args&&... args) {
+            for(auto &child : this->children) {
+                what(child, std::forward<Args>(args)...);
+            }
+        }
+
     protected:
         /**
          * @brief Get the parent of this widget
@@ -403,6 +434,9 @@ class Widget: public std::enable_shared_from_this<Widget> {
          * @brief Debugging label string
          */
         std::string debugLabel;
+
+        /// User specified tag value
+        uintptr_t tag{0};
 
         /**
          * @brief Frame rectangle

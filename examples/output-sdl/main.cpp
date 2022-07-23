@@ -56,27 +56,34 @@ class SecondTestViewController: public shittygui::ViewController {
             cont->addChild(check);
 
             // radio bois
-            auto radio1 = shittygui::MakeWidget<shittygui::widgets::RadioButton>({10, 100}, {240, 32},
-                    false, "Sativa");
-            radio1->setFont("Avenir Next", 18);
-
-            auto radio2 = shittygui::MakeWidget<shittygui::widgets::RadioButton>({10, 142}, {240, 32},
-                    false, "Indica");
-            radio2->setFont("Avenir Next", 18);
-
-            radio1->setPushCallback([radio2](auto whomst) {
-                auto radioboi = std::dynamic_pointer_cast<shittygui::widgets::RadioButton>(whomst);
-                printf("radio1 state: %d\n", radioboi->isChecked());
-                radio2->setChecked(false);
-            });
-            radio2->setPushCallback([radio1](auto whomst) {
-                auto radioboi = std::dynamic_pointer_cast<shittygui::widgets::RadioButton>(whomst);
-                printf("radio2 state: %d\n", radioboi->isChecked());
-                radio1->setChecked(false);
-            });
-
-            cont->addChild(radio1);
-            cont->addChild(radio2);
+            std::array<shittygui::widgets::RadioButton::GroupEntry, 3> entries{{
+                {
+                    .rect = {{0, 0}, {240, 32}},
+                    .label = "Sativa",
+                    .tag = 420,
+                    .isChecked = true,
+                },
+                {
+                    .rect = {{0, 42}, {240, 32}},
+                    .label = "Indica",
+                    .tag = 421,
+                },
+                {
+                    .rect = {{0, 82}, {240, 32}},
+                    .label = "Hybrid",
+                    .tag = 69,
+                },
+            }};
+            auto radioGroup = shittygui::widgets::RadioButton::MakeRadioGroup(entries,
+                [](auto &whomst, const auto tag) {
+                    printf("Radio selected: %lu\n", tag);
+                },
+                [](auto radio) {
+                    radio->setFont("Avenir Next", 18);
+                }
+            );
+            radioGroup->setFrameOrigin({10, 100});
+            cont->addChild(radioGroup);
 
             // icon
             auto tree = shittygui::Image::Read("./tree.png");
