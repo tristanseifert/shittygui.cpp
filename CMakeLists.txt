@@ -103,6 +103,7 @@ add_library(shittygui STATIC
     src/Widgets/ImageView.cpp
     src/Widgets/Label.cpp
     src/Widgets/ProgressBar.cpp
+    src/Widgets/ToggleButtonBase.cpp
 )
 target_include_directories(shittygui PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 target_include_directories(shittygui PRIVATE ${CMAKE_CURRENT_LIST_DIR}/include/shittygui)
