@@ -156,6 +156,13 @@ class Screen: public std::enable_shared_from_this<Screen> {
             this->needsDisplay();
         }
 
+        /**
+         * @brief Set whether input events are ignored
+         */
+        inline void setEventsInhibited(const bool inhibited) {
+            this->eventsInhibited = inhibited;
+        }
+
     public:
         void processEvents();
 
@@ -243,6 +250,8 @@ class Screen: public std::enable_shared_from_this<Screen> {
         uintptr_t scaled                        :1{false};
         /// The first responder widget has changed
         uintptr_t firstResponderDirty           :1{false};
+        /// Is event processing inhibited?
+        uintptr_t eventsInhibited               :1{false};
 };
 }
 

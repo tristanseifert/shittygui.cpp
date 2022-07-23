@@ -146,6 +146,10 @@ void Widget::drawChildren(cairo_t *drawCtx, bool everything) {
         if(child->inhibitDrawing && !this->animationParticipant) {
             continue;
         }
+        // also skip drawing if it's hidden
+        if(child->isHidden()) {
+            continue;
+        }
 
         // if the child is dirty, draw it
         if(child->isDirty() || everything) {

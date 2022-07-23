@@ -73,6 +73,21 @@ class Widget: public std::enable_shared_from_this<Widget> {
         }
 
         /**
+         * @brief Set whether the view is hidden
+         */
+        inline void setHidden(const bool hidden) {
+            this->hidden = hidden;
+            this->needsDisplay();
+        }
+        /**
+         * @brief Get whether the view is hidden
+         */
+        constexpr inline bool isHidden() const {
+            return this->hidden;
+        }
+
+
+        /**
          * @brief Does the widget need to be redrawn?
          *
          * Widgets should keep track of their internal "dirty" state. When their state changes,
@@ -439,6 +454,13 @@ class Widget: public std::enable_shared_from_this<Widget> {
          * During animation, we want to always redraw all widgets, regardless of their dirty state
          */
         uintptr_t animationParticipant          :1{false};
+
+        /**
+         * @brief Is the view hidden?
+         *
+         * Hidden views will not be drawn.
+         */
+        uintptr_t hidden                        :1{false};
 
     private:
         /**

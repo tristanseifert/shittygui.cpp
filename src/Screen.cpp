@@ -210,7 +210,8 @@ void Screen::redraw() {
      */
     if(this->rootWidget) {
         this->rootWidget->draw(this->drawCtx, this->forceDisplayFlag);
-        this->rootWidget->drawChildren(this->drawCtx, this->forceDisplayFlag);
+        this->rootWidget->drawChildren(this->drawCtx,
+                (this->forceDisplayFlag || this->rootWidget->isDirty()));
 
         this->forceDisplayFlag = false;
     }
@@ -283,6 +284,12 @@ void Screen::setRootViewController(const std::shared_ptr<ViewController> &newRoo
  */
 void Screen::processEvents() {
     std::lock_guard lg(this->eventQueueLock);
+
+    // simply clear events if events are inhibited
+    if(this->eventsInhibited) {
+        this->eventQueue.clear();
+        return;
+    }
 
     while(!this->eventQueue.empty()) {
         const auto &event = this->eventQueue.front();

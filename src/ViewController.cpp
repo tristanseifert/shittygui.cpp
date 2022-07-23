@@ -199,6 +199,8 @@ void ViewController::startAnimating() {
         }
     }
 
+    screen->setEventsInhibited(true);
+
     // internal bookkeeping
     this->animation.isActive = true;
     this->animation.start = std::chrono::high_resolution_clock::now();
@@ -216,6 +218,8 @@ void ViewController::endAnimating() {
     }
 
     this->getWidget()->animationParticipant = false;
+
+    screen->setEventsInhibited(false);
 
     // internal bookkeeping
     this->animation.isActive = false;
