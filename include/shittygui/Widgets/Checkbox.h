@@ -72,6 +72,104 @@ class Checkbox: public Widget {
             this->pushCallback.reset();
         }
 
+        /**
+         * @brief Set the width of the border
+         *
+         * @param newWidth New border width; set to 0 to disable.
+         */
+        inline void setBorderWidth(const double newWidth) {
+            this->borderWidth = std::max(0., newWidth);
+            this->needsDisplay();
+        }
+        /**
+         * @brief Get the width of the border
+         */
+        constexpr inline auto getBorderWidth() const {
+            return this->borderWidth;
+        }
+
+        /**
+         * @brief Set the color of the border
+         *
+         * @param normalColor new border color
+         */
+        inline void setBorderColor(const Color &normalColor) {
+            this->borderColor = normalColor;
+            this->needsDisplay();
+        }
+        /**
+         * @brief Get the current border color
+         */
+        constexpr inline auto &getBorderColor() const {
+            return this->borderColor;
+        }
+
+        /**
+         * @brief Set the radius of the container's border
+         */
+        inline void setBorderRadius(const double newRadius) {
+            this->borderRadius = newRadius;
+            this->needsDisplay();
+        }
+        /**
+         * @brief Get the current border radius
+         */
+        constexpr inline auto getBorderRadius() const {
+            return this->borderRadius;
+        }
+
+        /**
+         * @brief Set the regular filling color
+         */
+        inline void setRegularFillingColor(const Color &color) {
+            this->fillingColor = color;
+        }
+        /**
+         * @brief Get the current regular filling color
+         */
+        constexpr inline auto &getRegularFillingColor() const {
+            return this->fillingColor;
+        }
+
+        /**
+         * @brief Set the selected filling color
+         */
+        inline void setSelectedFillingColor(const Color &color) {
+            this->selectedFillingColor = color;
+        }
+        /**
+         * @brief Get the current selected filling color
+         */
+        constexpr inline auto &getSelectedFillingColor() const {
+            return this->selectedFillingColor;
+        }
+
+        /**
+         * @brief Set the regular check color
+         */
+        inline void setRegularCheckColor(const Color &color) {
+            this->checkColor = color;
+        }
+        /**
+         * @brief Get the current regular check color
+         */
+        constexpr inline auto &getRegularCheckColor() const {
+            return this->checkColor;
+        }
+
+        /**
+         * @brief Set the selected check color
+         */
+        inline void setSelectedCheckColor(const Color &color) {
+            this->selectedCheckColor = color;
+        }
+        /**
+         * @brief Get the current selected check color
+         */
+        constexpr inline auto &getSelectedCheckColor() const {
+            return this->selectedCheckColor;
+        }
+
     private:
         /// Callback to invoke when button is pushed
         std::optional<EventCallback> pushCallback;
