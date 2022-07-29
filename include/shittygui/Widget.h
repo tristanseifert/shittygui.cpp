@@ -340,6 +340,27 @@ class Widget: public std::enable_shared_from_this<Widget> {
             }
         }
 
+        /**
+         * @brief Get the screen this widget is currently on
+         */
+        inline std::shared_ptr<Screen> getScreen() {
+            // get the root widget
+            if(auto parent = this->getParent()) {
+                std::shared_ptr<Widget> next = parent;
+
+                do {
+                    parent = next;
+                    next = next->getParent();
+                } while(next);
+
+                return parent->getScreen();
+            }
+            // we're the root, so return the screen ptr
+            else {
+                return this->screen.lock();
+            }
+        }
+
     protected:
         /**
          * @brief Get the parent of this widget
@@ -364,27 +385,6 @@ class Widget: public std::enable_shared_from_this<Widget> {
             }
 
             return screen->getAnimator();
-        }
-
-        /**
-         * @brief Get the screen this widget is currently on
-         */
-        inline std::shared_ptr<Screen> getScreen() {
-            // get the root widget
-            if(auto parent = this->getParent()) {
-                std::shared_ptr<Widget> next = parent;
-
-                do {
-                    parent = next;
-                    next = next->getParent();
-                } while(next);
-
-                return parent->getScreen();
-            }
-            // we're the root, so return the screen ptr
-            else {
-                return this->screen.lock();
-            }
         }
 
         std::shared_ptr<Widget> findChildAt(const Point at, Point &outRelativePoint);
