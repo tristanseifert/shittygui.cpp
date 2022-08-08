@@ -351,7 +351,10 @@ beach:;
              * Handle button event
              *
              * We'll give the current first responder widget a chance to handle the event; if it
-             * doesn't handle it, we process our internal actions.
+             * doesn't handle it, ask the root view controller.
+             *
+             * Note that button events should not be coalesced; that is, even if multiple buttons
+             * are hit simulatneously, they should each generate their own button events.
              */
             else if constexpr(std::is_same_v<T, event::Button>) {
                 if(auto widget = this->firstResponder.lock()) {
@@ -361,12 +364,16 @@ beach:;
                     }
                 }
 
-                // do our stuff
-                switch(arg.type) {
-                    default:
-                        fprintf(stderr, "%s: unhandled, unknown button type $%02x (%s)\n",
-                                "shittygui", arg.type, arg.isDown ? "down" : "up");
+                if(this->rootVc) {
+                    const bool handeled = this->rootVc->handleButtonEventRoot(arg);
+                    if(handeled) {
+                        return;
+                    }
                 }
+
+                // the event isn't handeled :(
+                fprintf(stderr, "%s: unhandled button event [type $%02x (%s)]\n",
+                        "shittygui", arg.type, arg.isDown ? "down" : "up");
             }
             /*
              * Handle scroll event

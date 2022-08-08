@@ -321,3 +321,58 @@ done:;
 
     return true;
 }
+
+
+
+/**
+ * @brief Process a button event (from the root view controller)
+ *
+ * This method is invoked on the root view controller when the current first responder widget does
+ * not handle a button event.
+ *
+ * In this default implementation, we propagate the event to the topmost child view controller
+ * which should handle the event. Intermediate view controllers can abort the event bubbling
+ * through various callbacks.
+ *
+ * @param event Button event received
+ *
+ * @return Whether the event was handeled
+ *
+ * @seeAlso shouldPropagateButtonEvent
+ * @seeAlso handleButtonEvent
+ */
+bool ViewController::handleButtonEventRoot(const event::Button &event) {
+    // iterate until we find the topmost view controller (may be us)
+    auto vc = this->shared_from_this();
+
+    while(vc->presenting) {
+        // allow it to stop event bubbling
+        if(!vc->shouldPropagateButtonEvent(event)) {
+            return false;
+        }
+
+        // go to the next child
+        vc = vc->presenting;
+    }
+
+    // invoke the handler
+    return vc->handleButtonEvent(event);
+}
+
+/**
+ * This default implementation will dismiss this view controller when the menu button is pressed,
+ * and the view controller opts in to menu button dismissal.
+ */
+bool ViewController::handleButtonEvent(const event::Button &event) {
+    // we only care about menu button down
+    if(event.type != event::Button::Type::Menu || !event.isDown) {
+        return false;
+    }
+    else if(!this->shouldDismissOnMenuPress()) {
+        return false;
+    }
+
+    // dismiss the view controller
+    this->dismiss(true);
+    return true;
+}

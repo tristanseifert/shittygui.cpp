@@ -8,6 +8,8 @@
 #include <string_view>
 #include <vector>
 
+#include <shittygui/Event.h>
+
 namespace shittygui {
 class Widget;
 
@@ -20,6 +22,7 @@ class Widget;
  */
 class ViewController: public std::enable_shared_from_this<ViewController> {
     friend class Animator;
+    friend class Screen;
 
     public:
         /**
@@ -145,6 +148,48 @@ class ViewController: public std::enable_shared_from_this<ViewController> {
             return this->parent.lock();
         }
 
+        /**
+         * @brief Button event received for non-top view controller
+         *
+         * This is invoked when we received a button event (unhandled by the first responder) and
+         * this view controller is not the topmost view controller in the presentation hierarchy.
+         *
+         * You may use this to prevent events such as the menu button from automatically closing
+         * a view controller, for example, and instead present some sort of confirmation message
+         * before allowing the event to proceed.
+         *
+         * @param event Button event received
+         *
+         * @return Whether the event should continue to be propagated
+         */
+        virtual bool shouldPropagateButtonEvent(const event::Button &event) {
+            return true;
+        }
+
+        /**
+         * @brief Button event received for topmost view controller
+         *
+         * Invoked on the topmost view controller when a button event is received.
+         *
+         * @param event Button event received
+         *
+         * @return Whether the event was handeled
+         *
+         * @remark When subclassing, always invoke the superclass implementation if you want to
+         *         maintain the existing dismissal behavior.
+         */
+        virtual bool handleButtonEvent(const event::Button &event);
+
+        /**
+         * @brief Should the view controller be dismissed on menu button press?
+         *
+         * Override this method to allow the view controller to be automagically dismissed when
+         * the menu button is pushed.
+         */
+        virtual bool shouldDismissOnMenuPress() {
+            return false;
+        }
+
     private:
         void dismissFinalize();
 
@@ -152,6 +197,8 @@ class ViewController: public std::enable_shared_from_this<ViewController> {
         void endAnimating();
 
         bool processAnimationFrame();
+
+        bool handleButtonEventRoot(const event::Button &event);
 
     private:
         /**
